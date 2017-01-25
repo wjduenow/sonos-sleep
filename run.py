@@ -11,15 +11,16 @@ def test():
 @app.route('/hello')
 def hello_world():
 
-  try:
+#  try:
     zones = soco.discover()
     for zone in zones:
-        if zone.player_name == 'Dining Room':
-            sonos = zone.ip_address
+        if zone.player_name == 'Master Bedroom':
+            sonos = zone #.ip_address
 
-    playlists = player.get_music_library_information('sonos_playlists')
+    playlists = sonos.get_music_library_information('sonos_playlists')
     for playlist in playlists:
-        if playlist.title == 'sleep':
+        print playlist.title
+        if playlist.title == 'The Gambler': #'Sleep':
             new_pl = playlist
 
     sonos.clear_queue()
@@ -28,8 +29,8 @@ def hello_world():
 
     return 'hello world!'
 
-  except Exception as e: 
-    return e
+#  except: 
+#    return 'error'
 
 
 
