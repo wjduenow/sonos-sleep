@@ -1,17 +1,24 @@
-#from eve import Eve
 from flask import Flask
+from flask import request
 import soco
 
 app = Flask(__name__)
-#app = Eve()
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
 
+  room = "Master Bedroom"
+  if request.args.get('room'):
+      room = request.args.get('room')
+
+  content = request.get_json(silent=True)
+  if content['Room_Name']:
+      room = content['Room_Name']
+
   try:
     zones = soco.discover()
     for zone in zones:
-        if zone.player_name == 'Master Bedroom':
+        if zone.player_name == room:  #'Master Bedroom':
             sonos = zone #.ip_address
 
     playlists = sonos.get_music_library_information('sonos_playlists')
@@ -22,9 +29,10 @@ def sleep():
 
     sonos.clear_queue()
     sonos.add_to_queue(new_pl)
+    sonos.volume = 4
     sonos.play()
 
-    return 'Running Sleep Routine'
+    return "Running Sleep Routine in %s" % (room)
 
   except Exception as e:
      return ("error: %s" % (e))
@@ -32,15 +40,23 @@ def sleep():
 @app.route('/wake', methods=['GET', 'POST'])
 def wake():
 
+  room = "Master Bedroom"
+  if request.args.get('room'):
+      room = request.args.get('room')
+
+  content = request.get_json(silent=True)
+  if content['Room_Name']:
+      room = content['Room_Name']
+
   try:
     zones = soco.discover()
     for zone in zones:
-        if zone.player_name == 'Master Bedroom':
+        if zone.player_name == room: #'Master Bedroom':
             sonos = zone
 
     sonos.pause()
 
-    return 'Running Wake Routine'
+    return "Running Wake Routine in %s" % (room)
 
   except Exception as e:
      return ("error: %s" % (e))
