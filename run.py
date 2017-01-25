@@ -12,7 +12,8 @@ def sleep():
       room = request.args.get('room')
 
   content = request.get_json(silent=True)
-  if content['Room_Name']:
+  if content:
+#['Room_Name']:
       room = content['Room_Name']
 
   try:
@@ -45,7 +46,8 @@ def wake():
       room = request.args.get('room')
 
   content = request.get_json(silent=True)
-  if content['Room_Name']:
+  if content:
+#['Room_Name']:
       room = content['Room_Name']
 
   try:
