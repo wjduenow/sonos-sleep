@@ -1,9 +1,11 @@
-from eve import Eve
+#from eve import Eve
+from flask import Flask
 import soco
 
-app = Eve()
+app = Flask(__name__)
+#app = Eve()
 
-@app.route('/sleep')
+@app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
 
   try:
@@ -24,10 +26,10 @@ def sleep():
 
     return 'Running Sleep Routine'
 
-   except Exception as e:
+  except Exception as e:
      return ("error: %s" % (e))
 
-@app.route('/wake')
+@app.route('/wake', methods=['GET', 'POST'])
 def wake():
 
   try:
@@ -40,7 +42,7 @@ def wake():
 
     return 'Running Wake Routine'
 
-   except Exception as e:
+  except Exception as e:
      return ("error: %s" % (e))
 
 
