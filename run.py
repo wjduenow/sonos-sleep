@@ -30,7 +30,7 @@ def sleep():
 
     sonos.clear_queue()
     sonos.add_to_queue(new_pl)
-    sonos.volume = 40
+    sonos.volume = 35
     sonos.play()
 
     return "Running Sleep Routine in %s" % (room)
