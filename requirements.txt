@@ -1,2 +1,4 @@
 flask
 soco
+pyHS100
+pprint

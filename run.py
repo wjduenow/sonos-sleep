@@ -1,6 +1,8 @@
 from flask import Flask
 from flask import request
 import soco
+from pyHS100 import SmartPlug
+from pprint import pformat as pf
 
 app = Flask(__name__)
 
@@ -15,6 +17,10 @@ def sleep():
   if content:
 #['Room_Name']:
       room = content['Room_Name']
+
+  if room == "Bedroom":
+    girls_night_light("On")
+
 
   try:
     zones = soco.discover()
@@ -33,6 +39,8 @@ def sleep():
     sonos.volume = 35
     sonos.play()
 
+
+
     return "Running Sleep Routine in %s" % (room)
 
   except Exception as e:
@@ -44,6 +52,9 @@ def wake():
   room = "Master Bedroom"
   if request.args.get('room'):
       room = request.args.get('room')
+
+  if room == "Bedroom":
+    girls_night_light("Off")
 
   content = request.get_json(silent=True)
   if content:
@@ -63,6 +74,15 @@ def wake():
   except Exception as e:
      return ("error: %s" % (e))
 
+
+def girls_night_light(state = "Off"):
+  plug = SmartPlug("192.168.250.186")
+  if state == "On":
+    plug.turn_on()
+    plug.led = False
+  else:
+    plug.turn_off()
+    plug.led = True
 
 if __name__ == '__main__':
     app.run(debug=True)
