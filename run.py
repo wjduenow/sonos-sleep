@@ -6,6 +6,8 @@ from pprint import pformat as pf
 
 app = Flask(__name__)
 
+rooms = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 35}}
+
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
 
@@ -13,11 +15,15 @@ def sleep():
   if request.args.get('room'):
       room = request.args.get('room')
 
+  room_volume = rooms['Master Bedroom']['volume']
+  if request.args.get('room_volume'):
+      room_volume = request.args.get('room_volume')
+
   content = request.get_json(silent=True)
   if content:
-#['Room_Name']:
       room = content['Room_Name']
 
+  #Manage Lights if Girls Room
   if room == "Bedroom":
     girls_night_light("On")
 
@@ -30,13 +36,13 @@ def sleep():
 
     playlists = sonos.get_music_library_information('sonos_playlists')
     for playlist in playlists:
-        print playlist.title
+        print(playlist.title)
         if playlist.title == 'Sleep':
             new_pl = playlist
 
     sonos.clear_queue()
     sonos.add_to_queue(new_pl)
-    sonos.volume = 35
+    sonos.volume = room_volume
     sonos.play()
 
 
@@ -53,12 +59,12 @@ def wake():
   if request.args.get('room'):
       room = request.args.get('room')
 
+  #Manage Lights if Girls Room
   if room == "Bedroom":
     girls_night_light("Off")
 
   content = request.get_json(silent=True)
   if content:
-#['Room_Name']:
       room = content['Room_Name']
 
   try:
@@ -76,7 +82,9 @@ def wake():
 
 
 def girls_night_light(state = "Off"):
-  plug = SmartPlug("192.168.250.186")
+  
+  plug = SmartPlug("192.168.86.113")
+
   if state == "On":
     plug.turn_on()
     plug.led = False
