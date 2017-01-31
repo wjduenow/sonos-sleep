@@ -3,10 +3,11 @@ from flask import request
 import soco
 from pyHS100 import SmartPlug
 from pprint import pformat as pf
+import time
 
 app = Flask(__name__)
 
-rooms = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 35}}
+rooms = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 15}}
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
@@ -31,9 +32,10 @@ def sleep():
   try:
     zones = soco.discover()
     for zone in zones:
-        if zone.player_name == room:  #'Master Bedroom':
-            sonos = zone #.ip_address
+        if zone.player_name == room:
+            sonos = zone
 
+    print(sonos.player_name)
     playlists = sonos.get_music_library_information('sonos_playlists')
     for playlist in playlists:
         print(playlist.title)
@@ -42,6 +44,7 @@ def sleep():
 
     sonos.clear_queue()
     sonos.add_to_queue(new_pl)
+    sonos.play_from_queue(0)
     sonos.volume = room_volume
     sonos.play()
 
