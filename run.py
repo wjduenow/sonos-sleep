@@ -6,7 +6,7 @@ from pprint import pformat as pf
 
 app = Flask(__name__)
 
-rooms = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 35}}
+rooms = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 15}}
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
@@ -14,6 +14,8 @@ def sleep():
   room = "Master Bedroom"
   if request.args.get('room'):
       room = request.args.get('room')
+
+#  print(room)
 
   room_volume = rooms['Master Bedroom']['volume']
   if request.args.get('room_volume'):
@@ -31,13 +33,15 @@ def sleep():
   try:
     zones = soco.discover()
     for zone in zones:
-        if zone.player_name == room:  #'Master Bedroom':
-            sonos = zone #.ip_address
+#        print(zone.player_name)
+        if zone.player_name == room:
+            sonos = zone
 
+    print(sonos.player_name)
     playlists = sonos.get_music_library_information('sonos_playlists')
     for playlist in playlists:
         print(playlist.title)
-        if playlist.title == 'Sleep':
+        if playlist.title == 'The Gambler':
             new_pl = playlist
 
     sonos.clear_queue()
