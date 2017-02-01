@@ -7,7 +7,7 @@ import time
 
 app = Flask(__name__)
 
-rooms = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 15}}
+rooms = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 35}, "TV Room": {"volume": 40}}
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
@@ -16,7 +16,7 @@ def sleep():
   if request.args.get('room'):
       room = request.args.get('room')
 
-  room_volume = rooms['Master Bedroom']['volume']
+  room_volume = rooms[room]['volume']
   if request.args.get('room_volume'):
       room_volume = request.args.get('room_volume')
 
@@ -28,30 +28,9 @@ def sleep():
   if room == "Bedroom":
     girls_night_light("On")
 
-
   try:
-    zones = soco.discover()
-    for zone in zones:
-        if zone.player_name == room:
-            sonos = zone
-
-    print(sonos.player_name)
-    playlists = sonos.get_music_library_information('sonos_playlists')
-    for playlist in playlists:
-        print(playlist.title)
-        if playlist.title == 'Sleep':
-            new_pl = playlist
-
-    sonos.clear_queue()
-    sonos.add_to_queue(new_pl)
-    sonos.play_from_queue(0)
-    sonos.volume = room_volume
-    sonos.play()
-
-
-
+    play_playlist(room, 'Sleep', room_volume)
     return "Running Sleep Routine in %s" % (room)
-
   except Exception as e:
      return ("error: %s" % (e))
 
@@ -83,6 +62,26 @@ def wake():
   except Exception as e:
      return ("error: %s" % (e))
 
+@app.route('/sonos_playlist', methods=['GET', 'POST'])
+def sonos_playlist():
+
+  room = "Master Bedroom"
+  if request.args.get('room'):
+      room = request.args.get('room')
+
+  play_list = "Sleep"
+  if request.args.get('play_list'):
+      play_list = request.args.get('play_list')
+
+  room_volume = rooms[room]['volume']
+  if request.args.get('room_volume'):
+      room_volume = request.args.get('room_volume')
+
+  try:
+    play_playlist(room, play_list, room_volume)
+  except Exception as e:
+     return ("error: %s" % (e))
+
 
 def girls_night_light(state = "Off"):
   
@@ -95,5 +94,28 @@ def girls_night_light(state = "Off"):
     plug.turn_off()
     plug.led = True
 
+def play_playlist(playlist, room, volume):
+
+  zones = soco.discover()
+  for zone in zones:
+      if zone.player_name == room:
+          sonos = zone
+
+  print(sonos.player_name)
+  playlists = sonos.get_music_library_information('sonos_playlists')
+  for playlist in playlists:
+      print(playlist.title)
+      if playlist.title == playlist:
+          new_pl = playlist
+
+  sonos.clear_queue()
+  sonos.add_to_queue(new_pl)
+  sonos.play_from_queue(0)
+  sonos.volume = volume
+  sonos.play()
+
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
