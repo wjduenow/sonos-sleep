@@ -5,6 +5,7 @@ from pyHS100 import SmartPlug
 from pprint import pformat as pf
 import time
 
+
 app = Flask(__name__)
 
 rooms = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 35}, "TV Room": {"volume": 40}}
@@ -79,6 +80,7 @@ def sonos_playlist():
 
   try:
     play_playlist(room, play_list, room_volume)
+    return ("Playing %s in %s at %s volume" % (play_list, room, room_volume))
   except Exception as e:
      return ("error: %s" % (e))
 
@@ -94,7 +96,7 @@ def girls_night_light(state = "Off"):
     plug.turn_off()
     plug.led = True
 
-def play_playlist(playlist, room, volume):
+def play_playlist(room, playlist_name, volume):
 
   zones = soco.discover()
   for zone in zones:
@@ -104,11 +106,13 @@ def play_playlist(playlist, room, volume):
   print(sonos.player_name)
   playlists = sonos.get_music_library_information('sonos_playlists')
   for playlist in playlists:
-      print(playlist.title)
-      if playlist.title == playlist:
+      print("#%s#" % (playlist.title))
+      if str(playlist.title) == str(playlist_name):
+          print("Assigning #%s#" % (playlist_name))
           new_pl = playlist
 
   sonos.clear_queue()
+  print("Adding %s to the queue" % (playlist.title))
   sonos.add_to_queue(new_pl)
   sonos.play_from_queue(0)
   sonos.volume = volume
