@@ -21,12 +21,12 @@ def list_play_lists():
   str_response = "<h1>PLAYLISTS</h1>"
   playlists = sonos.get_music_library_information('sonos_playlists')
   for playlist in playlists:
-      str_response += "<h2>%s</h2><ul>" % (playlist.title)
+      str_response += "<h2>%s</h2><ol>" % (playlist.title)
 
       for track in sonos.browse(playlist)['item_list']:
-        str_response += "<li>%s - %s - %s</li>" % (track.title, track.creator, track.album)
+        str_response += "<li>%s - <b>%s</b> - <i>%s</i></li>" % (track.title, track.creator, track.album)
 
-      str_response += "</ul><br>"
+      str_response += "</ol><br>"
 
   return (str_response)
 
