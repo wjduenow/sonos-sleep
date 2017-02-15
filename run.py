@@ -10,6 +10,26 @@ app = Flask(__name__)
 
 rooms = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 35}, "Living Room": {"volume": 40}}
 
+@app.route('/list_play_lists', methods=['GET', 'POST'])
+def list_play_lists():
+
+  zones = soco.discover()
+  for zone in zones:
+      if zone.player_name == "Bedroom":
+          sonos = zone
+
+  str_response = "<h1>PLAYLISTS</h1>"
+  playlists = sonos.get_music_library_information('sonos_playlists')
+  for playlist in playlists:
+      str_response += "<h2>%s</h2><ul>" % (playlist.title)
+
+      for track in sonos.browse(playlist)['item_list']:
+        str_response += "<li>%s - %s - %s</li>" % (track.title, track.creator, track.album)
+
+      str_response += "</ul><br>"
+
+  return (str_response)
+
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
 
