@@ -1,5 +1,6 @@
 from flask import Flask
 from flask import request
+from flask import render_template
 import soco
 from pyHS100 import SmartPlug
 from pprint import pformat as pf
@@ -28,7 +29,8 @@ def list_play_lists():
 
       str_response += "</ol><br>"
 
-  return (str_response)
+  #return (str_response)
+  return render_template('list_play_lists.html', str_response=str_response)
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
