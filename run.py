@@ -8,7 +8,7 @@ import time
 
 app = Flask(__name__)
 
-rooms = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 35}, "TV Room": {"volume": 40}}
+rooms = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 35}, "Living Room": {"volume": 40}}
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
@@ -53,6 +53,7 @@ def wake():
   try:
     zones = soco.discover()
     for zone in zones:
+        print(zone.player_name)
         if zone.player_name == room: #'Master Bedroom':
             sonos = zone
 
@@ -82,7 +83,7 @@ def sonos_playlist():
     play_playlist(room, play_list, room_volume)
     return ("Playing %s in %s at %s volume" % (play_list, room, room_volume))
   except Exception as e:
-     return ("error: %s" % (e))
+     return ("error: %s in (room: %s)" % (e, room))
 
 
 def girls_night_light(state = "Off"):
@@ -100,6 +101,7 @@ def play_playlist(room, playlist_name, volume):
 
   zones = soco.discover()
   for zone in zones:
+      print(zone.player_name)
       if zone.player_name == room:
           sonos = zone
 
@@ -122,4 +124,6 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
+#if __name__ == "__main__":
+#    app.run(host='0.0.0.0')
 
