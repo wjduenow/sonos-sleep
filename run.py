@@ -19,18 +19,18 @@ def list_play_lists():
       if zone.player_name == "Bedroom":
           sonos = zone
 
-  str_response = "<h1>PLAYLISTS</h1>"
   playlists = sonos.get_music_library_information('sonos_playlists')
+  dict_play_lists = {}
+
   for playlist in playlists:
-      str_response += "<h2>%s</h2><ol>" % (playlist.title)
-
+      pl_tracks = []
+      
       for track in sonos.browse(playlist)['item_list']:
-        str_response += "<li>%s - <b>%s</b> - <i>%s</i></li>" % (track.title, track.creator, track.album)
+        pl_tracks.append({'title': track.title, 'creator': track.creator, 'album': track.album})
 
-      str_response += "</ol><br>"
+      dict_play_lists[playlist.title] = pl_tracks
 
-  #return (str_response)
-  return render_template('list_play_lists.html', str_response=str_response)
+  return render_template('list_play_lists.html', zones = zones, dict_play_lists = dict_play_lists)
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
