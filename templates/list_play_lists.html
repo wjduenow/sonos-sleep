@@ -4,26 +4,54 @@
   <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/bootstrap.min.css') }}">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
+
 <body>
 
+{% with messages = get_flashed_messages(with_categories=true) %}
+  <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible" role="alert">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <!-- <strong>Title</strong> --> {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 
 
 <div class="container">
+
+  <div class="row">
+    <div class="col-md-12">
+      <h1>Mute Rooms</h1>
+       {% for zone in zones %}
+          <small>
+            <a  class="btn btn-primary btn-xs" role="button" href="/wake?room={{ zone.player_name }}">{{ zone.player_name }}</a>
+          </small>
+       {% endfor %}
+    </div>
+  </div>
+
+
+<br />
+
+<h1>Play Lists</h1>
   {% for pl in dict_play_lists %}
   <div class="row">
     <div class="col-md-12">
-      <h1>{{ pl }}
+      <h2>{{ pl }} <input type="button" class="btn" data-toggle="collapse" data-target="#toggleDemo_{{ pl }}" value="V">
       <small>Play In: 
        {% for zone in zones %}
          <a  class="btn btn-primary btn-xs" role="button" href="/sonos_playlist?play_list={{ pl }}&room={{ zone.player_name }}">{{ zone.player_name }}</a>
        {% endfor %}
      </small>
-     </h1>
+     </h2>
     </div>
 
   </div>
   <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-12" id="toggleDemo_{{ pl }}" class="collapse in">
       <ol>
         {% for t in dict_play_lists[pl] %}
           <li>{{ t.title }} - <b>{{ t.creator }}</b> - <i>{{ t.album }}</i></li>

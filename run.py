@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import request
 from flask import render_template
+from flask import flash, redirect
 import soco
 from pyHS100 import SmartPlug
 from pprint import pformat as pf
@@ -8,10 +9,11 @@ import time
 
 
 app = Flask(__name__)
+app.secret_key = 'mixelplk'
 
 rooms = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 35}, "Living Room": {"volume": 40}}
 
-@app.route('/list_play_lists', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def list_play_lists():
 
   zones = soco.discover()
@@ -103,9 +105,12 @@ def sonos_playlist():
 
   try:
     play_playlist(room, play_list, room_volume)
-    return ("Playing %s in %s at %s volume" % (play_list, room, room_volume))
+    flash("Playing %s in %s at %s volume" % (play_list, room, room_volume), 'success')
+    return redirect('/')
+    #return ("Playing %s in %s at %s volume" % (play_list, room, room_volume))
   except Exception as e:
-     return ("error: %s in (room: %s)" % (e, room))
+     flash("error: %s in (room: %s)" % (e, room), 'error')
+     #return ("error: %s in (room: %s)" % (e, room))
 
 
 def girls_night_light(state = "Off"):
