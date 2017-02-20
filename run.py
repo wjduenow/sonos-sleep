@@ -21,6 +21,10 @@ def list_play_lists():
       if zone.player_name == "Bedroom":
           sonos = zone
 
+  plug = SmartPlug("192.168.86.113")
+  plug_state = plug.state
+
+
   playlists = sonos.get_music_library_information('sonos_playlists')
   dict_play_lists = {}
 
@@ -32,7 +36,7 @@ def list_play_lists():
 
       dict_play_lists[playlist.title] = pl_tracks
 
-  return render_template('list_play_lists.html', zones = zones, dict_play_lists = dict_play_lists)
+  return render_template('list_play_lists.html', zones = zones, dict_play_lists = dict_play_lists, plug_state = plug_state)
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():

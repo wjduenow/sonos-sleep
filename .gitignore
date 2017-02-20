@@ -1,3 +1,5 @@
 env
 *.pyc
 nohup.out
+static/.DS_Store
+.DS_Store
