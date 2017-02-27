@@ -6,12 +6,14 @@ import soco
 from pyHS100 import SmartPlug
 from pprint import pformat as pf
 import time
-
+import socket
 
 app = Flask(__name__)
 app.secret_key = 'mixelplk'
 
-rooms = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 35}, "Living Room": {"volume": 40}}
+ROOMS = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 35}, "Living Room": {"volume": 40}}
+POWER_PLUG = 'hs100'
+
 
 @app.route('/', methods=['GET', 'POST'])
 def list_play_lists():
@@ -21,7 +23,7 @@ def list_play_lists():
       if zone.player_name == "Bedroom":
           sonos = zone
 
-  plug = SmartPlug("192.168.86.113")
+  plug = SmartPlug(get_plug_ip())
   plug_state = plug.state
 
 
@@ -45,7 +47,7 @@ def sleep():
   if request.args.get('room'):
       room = request.args.get('room')
 
-  room_volume = rooms[room]['volume']
+  room_volume = ROOMS[room]['volume']
   if request.args.get('room_volume'):
       room_volume = request.args.get('room_volume')
 
@@ -103,7 +105,7 @@ def sonos_playlist():
   if request.args.get('play_list'):
       play_list = request.args.get('play_list')
 
-  room_volume = rooms[room]['volume']
+  room_volume = ROOMS[room]['volume']
   if request.args.get('room_volume'):
       room_volume = request.args.get('room_volume')
 
@@ -119,7 +121,7 @@ def sonos_playlist():
 
 def girls_night_light(state = "Off"):
   
-  plug = SmartPlug("192.168.86.113")
+  plug = SmartPlug(get_plug_ip())
 
   if state == "On":
     plug.turn_on()
@@ -150,6 +152,10 @@ def play_playlist(room, playlist_name, volume):
   sonos.play_from_queue(0)
   sonos.volume = volume
   sonos.play()
+
+def get_plug_ip():
+   return socket.gethostbyname(POWER_PLUG)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
