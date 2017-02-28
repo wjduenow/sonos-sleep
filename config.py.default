@@ -1,0 +1,2 @@
+ROOMS = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 35}, "Living Room": {"volume": 40}}
+POWER_PLUG = 'hs100'

@@ -3,3 +3,4 @@ env
 nohup.out
 static/.DS_Store
 .DS_Store
+config.py

@@ -7,27 +7,34 @@ from pyHS100 import SmartPlug
 from pprint import pformat as pf
 import time
 import socket
+import config
 
 app = Flask(__name__)
 app.secret_key = 'mixelplk'
-
-ROOMS = {"Master Bedroom": {"volume": 30}, "Bedroom": {"volume": 35}, "Living Room": {"volume": 40}}
-POWER_PLUG = 'hs100'
 
 
 @app.route('/', methods=['GET', 'POST'])
 def list_play_lists():
 
   zones = soco.discover()
-  for zone in zones:
-      if zone.player_name == "Bedroom":
-          sonos = zone
+  if zones:
+    for zone in zones:
+        if zone.player_name == "Bedroom":
+            sonos = zone
+  else:
+    zones = {'Example': {"player_name": "Example 3"}, 'Example 2': {"player_name": "Example 3"}, "Example 3": {"player_name": "Example 3"}}
 
-  plug = SmartPlug(get_plug_ip())
-  plug_state = plug.state
+  try:
+    plug = SmartPlug(get_plug_ip())
+    plug_state = plug.state
+  except:
+    plug_state = "unknown"
 
+  try:
+    playlists = sonos.get_music_library_information('sonos_playlists')
+  except:
+    playlists = {}
 
-  playlists = sonos.get_music_library_information('sonos_playlists')
   dict_play_lists = {}
 
   for playlist in playlists:
