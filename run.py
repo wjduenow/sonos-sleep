@@ -7,7 +7,7 @@ from pyHS100 import SmartPlug
 from pprint import pformat as pf
 import time
 import socket
-import config
+from config import ROOMS, POWER_PLUG
 
 app = Flask(__name__)
 app.secret_key = 'mixelplk'
