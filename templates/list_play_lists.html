@@ -29,13 +29,15 @@
   </div>
 
   <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-3">
       <h1>Mute Rooms</h1>
+    </div>
+    <div class="col-md-9">
+       <h1>
        {% for zone in zones %}
-          <small>
-            <a  class="btn btn-primary btn-xs" role="button" href="/wake?room={{ zone.player_name }}">{{ zone.player_name }}</a>
-          </small>
+            <a  class="btn btn-primary btn-sm" role="button" href="/wake?room={{ zone.player_name }}">{{ zone.player_name }}</a>
        {% endfor %}
+       </h1>
     </div>
   </div>
 

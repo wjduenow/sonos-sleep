@@ -9,6 +9,7 @@ import time
 import socket
 from config import ROOMS, NIGHT_LIGHT_POWER_PLUG
 
+
 app = Flask(__name__)
 app.secret_key = 'mixelplk'
 
