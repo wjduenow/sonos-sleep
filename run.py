@@ -7,7 +7,7 @@ from pyHS100 import SmartPlug
 from pprint import pformat as pf
 import time
 import socket
-import config
+from config import ROOMS, NIGHT_LIGHT_POWER_PLUG
 
 app = Flask(__name__)
 app.secret_key = 'mixelplk'
@@ -19,30 +19,29 @@ def list_play_lists():
   zones = soco.discover()
   if zones:
     for zone in zones:
-        if zone.player_name == "Bedroom":
+        sonos = zone
+        if zone.player_name == "Living Room":
             sonos = zone
   else:
     zones = {'Example': {"player_name": "Example 3"}, 'Example 2': {"player_name": "Example 3"}, "Example 3": {"player_name": "Example 3"}}
 
   try:
-    plug = SmartPlug(get_plug_ip())
+    plug = SmartPlug(NIGHT_LIGHT_POWER_PLUG)
     plug_state = plug.state
   except:
     plug_state = "unknown"
 
   try:
-    playlists = sonos.get_music_library_information('sonos_playlists')
+    playlists = sonos.get_sonos_playlists()
   except:
     playlists = {}
 
   dict_play_lists = {}
 
+
+
   for playlist in playlists:
       pl_tracks = []
-      
-      for track in sonos.browse(playlist)['item_list']:
-        pl_tracks.append({'title': track.title, 'creator': track.creator, 'album': track.album})
-
       dict_play_lists[playlist.title] = pl_tracks
 
   return render_template('list_play_lists.html', zones = zones, dict_play_lists = dict_play_lists, plug_state = plug_state)
@@ -63,8 +62,8 @@ def sleep():
       room = content['Room_Name']
 
   #Manage Lights if Girls Room
-  if room == "Bedroom":
-    girls_night_light("On")
+  if room == "Brynn":
+    brynn_night_light("On")
 
   try:
     play_playlist(room, 'Sleep', room_volume)
@@ -80,8 +79,8 @@ def wake():
       room = request.args.get('room')
 
   #Manage Lights if Girls Room
-  if room == "Bedroom":
-    girls_night_light("Off")
+  if room == "Brynn":
+    brynn_night_light("Off")
 
   content = request.get_json(silent=True)
   if content:
@@ -126,9 +125,9 @@ def sonos_playlist():
      #return ("error: %s in (room: %s)" % (e, room))
 
 
-def girls_night_light(state = "Off"):
+def brynn_night_light(state = "Off"):
   
-  plug = SmartPlug(get_plug_ip())
+  plug = SmartPlug(NIGHT_LIGHT_POWER_PLUG)
 
   if state == "On":
     plug.turn_on()
@@ -146,7 +145,8 @@ def play_playlist(room, playlist_name, volume):
           sonos = zone
 
   print(sonos.player_name)
-  playlists = sonos.get_music_library_information('sonos_playlists')
+  print(dir(sonos))
+  playlists = sonos.get_sonos_playlists()
   for playlist in playlists:
       print("#%s#" % (playlist.title))
       if str(playlist.title) == str(playlist_name):
@@ -154,7 +154,7 @@ def play_playlist(room, playlist_name, volume):
           new_pl = playlist
 
   sonos.clear_queue()
-  print("Adding %s to the queue" % (playlist.title))
+  print("Adding %s to the queue" % (playlist_name))
   sonos.add_to_queue(new_pl)
   sonos.play_from_queue(0)
   sonos.volume = volume
@@ -165,7 +165,8 @@ def get_plug_ip():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='192.168.86.143', port=8999)
+    #app.run(host='0.0.0.0')
 
 
 #if __name__ == "__main__":
