@@ -1,3 +1,12 @@
+import os
+import sys
+
+# Add vendor directory to module search path
+parent_dir = os.path.abspath(os.path.dirname(__file__))
+vendor_dir = os.path.join(parent_dir, 'vendor')
+
+sys.path.append(vendor_dir)
+
 from flask import Flask
 from flask import request
 from flask import render_template
@@ -8,6 +17,8 @@ from pprint import pformat as pf
 import time
 import socket
 from config import ROOMS, NIGHT_LIGHT_POWER_PLUG
+
+
 
 
 app = Flask(__name__)
@@ -145,8 +156,6 @@ def play_playlist(room, playlist_name, volume):
       if zone.player_name == room:
           sonos = zone
 
-  print(sonos.player_name)
-  print(dir(sonos))
   playlists = sonos.get_sonos_playlists()
   for playlist in playlists:
       print("#%s#" % (playlist.title))
@@ -166,8 +175,8 @@ def get_plug_ip():
 
 
 if __name__ == '__main__':
-    app.run(host='192.168.86.143', port=8999)
-    #app.run(host='0.0.0.0')
+    #app.run(host='192.168.86.143', port=8999)
+    app.run(host='0.0.0.0')
 
 
 #if __name__ == "__main__":

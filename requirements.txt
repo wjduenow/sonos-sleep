@@ -10,7 +10,7 @@ MarkupSafe==1.1.1
 pprint==0.1
 pyHS100==0.3.4
 requests==2.21.0
-soco==0.16
+#soco==0.16
 typing==3.6.6
 urllib3==1.24.1
 Werkzeug==0.14.1
