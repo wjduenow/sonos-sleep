@@ -6,3 +6,4 @@ static/.DS_Store
 config.py
 VENV
 .vscode/
+sonos-sleep.tar

@@ -1,8 +1,8 @@
 FROM python:3.6-alpine
 COPY . /app
 WORKDIR /app
-RM config.py
-MV config.py.default config.py
+RUN rm config.py
+RUN mv config.py.default config.py
 
 # Port to expose
 EXPOSE 5000
