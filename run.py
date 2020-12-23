@@ -11,22 +11,26 @@ from flask import Flask
 from flask import request
 from flask import render_template
 from flask import flash, redirect
+from flask_api import status
 import soco
 from pyHS100 import SmartPlug
-from pprint import pformat as pf
+#from pprint import pformat as pf
 import time
 import socket
-from config import ROOMS, NIGHT_LIGHT_POWER_PLUG
+from config import ROOMS, NIGHT_LIGHT_POWER_PLUG, SECRET_KEY, HOST_IP
 
 
 
 
 app = Flask(__name__)
-app.secret_key = 'mixelplk'
+app.secret_key = SECRET_KEY
 
 
 @app.route('/', methods=['GET', 'POST'])
 def list_play_lists():
+
+  if request.args.get("secret_key") != app.secret_key:
+      return 'Forbidden' , status.HTTP_403_FORBIDDEN
 
   zones = soco.discover()
   if zones:
@@ -56,10 +60,13 @@ def list_play_lists():
       pl_tracks = []
       dict_play_lists[playlist.title] = pl_tracks
 
-  return render_template('list_play_lists.html', zones = zones, dict_play_lists = dict_play_lists, plug_state = plug_state)
+  return render_template('list_play_lists.html', zones = zones, dict_play_lists = dict_play_lists, plug_state = plug_state, secret_key = app.secret_key)
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
+
+  if request.args.get("secret_key") != app.secret_key:
+      return status.HTTP_403_FORBIDDEN
 
   room = "Master Bedroom"
   if request.args.get('room'):
@@ -85,6 +92,9 @@ def sleep():
 
 @app.route('/wake', methods=['GET', 'POST'])
 def wake():
+
+  if request.args.get("secret_key") != app.secret_key:
+      return status.HTTP_403_FORBIDDEN
 
   room = "Master Bedroom"
   if request.args.get('room'):
@@ -115,6 +125,12 @@ def wake():
 @app.route('/sonos_playlist', methods=['GET', 'POST'])
 def sonos_playlist():
 
+
+  if request.args.get("secret_key") != app.secret_key:
+      return status.HTTP_403_FORBIDDEN
+
+  secret_key = request.args.get("secret_key")
+
   room = "Master Bedroom"
   if request.args.get('room'):
       room = request.args.get('room')
@@ -130,7 +146,7 @@ def sonos_playlist():
   try:
     play_playlist(room, play_list, room_volume)
     flash("Playing %s in %s at %s volume" % (play_list, room, room_volume), 'success')
-    return redirect('/')
+    return redirect("/?secret_key=%s" % (secret_key))
     #return ("Playing %s in %s at %s volume" % (play_list, room, room_volume))
   except Exception as e:
      flash("error: %s in (room: %s)" % (e, room), 'error')
@@ -175,8 +191,8 @@ def get_plug_ip():
 
 
 if __name__ == '__main__':
-    #app.run(host='192.168.86.143', port=8999)
-    app.run(host='0.0.0.0')
+    #app.run(host='192.168.86.34', port=8999)
+    app.run(host=HOST_IP, port=8999)
 
 
 #if __name__ == "__main__":
