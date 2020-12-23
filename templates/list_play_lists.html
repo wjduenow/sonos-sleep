@@ -35,7 +35,7 @@
     <div class="col-md-9">
        <h1>
        {% for zone in zones %}
-            <a  class="btn btn-primary btn-sm" role="button" href="/wake?room={{ zone.player_name }}">{{ zone.player_name }}</a>
+            <a  class="btn btn-primary btn-sm" role="button" href="/wake?room={{ zone.player_name }}&secret_key={{ secret_key }}">{{ zone.player_name }}</a>
        {% endfor %}
        </h1>
     </div>
@@ -51,7 +51,7 @@
       <h2>{{ pl }} <input type="button" class="btn" data-toggle="collapse" data-target="#toggleDemo_{{ pl }}" value="V">
       <small>Play In: 
        {% for zone in zones %}
-         <a  class="btn btn-primary btn-xs" role="button" href="/sonos_playlist?play_list={{ pl }}&room={{ zone.player_name }}">{{ zone.player_name }}</a>
+         <a  class="btn btn-primary btn-xs" role="button" href="/sonos_playlist?play_list={{ pl }}&room={{ zone.player_name }}&secret_key={{ secret_key }}">{{ zone.player_name }}</a>
        {% endfor %}
      </small>
      </h2>

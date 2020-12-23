@@ -55,7 +55,6 @@ def list_play_lists():
   dict_play_lists = {}
 
 
-
   for playlist in playlists:
       pl_tracks = []
       dict_play_lists[playlist.title] = pl_tracks
@@ -66,7 +65,9 @@ def list_play_lists():
 def sleep():
 
   if request.args.get("secret_key") != app.secret_key:
-      return status.HTTP_403_FORBIDDEN
+      return 'Forbidden' , status.HTTP_403_FORBIDDEN
+
+  secret_key = request.args.get("secret_key")
 
   room = "Master Bedroom"
   if request.args.get('room'):
@@ -86,7 +87,8 @@ def sleep():
 
   try:
     play_playlist(room, 'Sleep', room_volume)
-    return "Running Sleep Routine in %s" % (room)
+    flash("Running Sleep Routine in %s" %(str(room)), 'success')
+    return redirect("/?secret_key=%s" % (secret_key))
   except Exception as e:
      return ("error: %s" % (e))
 
@@ -94,7 +96,9 @@ def sleep():
 def wake():
 
   if request.args.get("secret_key") != app.secret_key:
-      return status.HTTP_403_FORBIDDEN
+      return 'Forbidden' , status.HTTP_403_FORBIDDEN
+
+  secret_key = request.args.get("secret_key")
 
   room = "Master Bedroom"
   if request.args.get('room'):
@@ -117,7 +121,9 @@ def wake():
 
     sonos.pause()
 
-    return "Running Wake Routine in %s" % (room)
+    #return "Running Wake Routine in %s" %(str(room))
+    flash("Running Wake Routine in %s" %(str(room)), 'success')
+    return redirect("/?secret_key=%s" % (secret_key))
 
   except Exception as e:
      return ("error: %s" % (e))
@@ -127,7 +133,7 @@ def sonos_playlist():
 
 
   if request.args.get("secret_key") != app.secret_key:
-      return status.HTTP_403_FORBIDDEN
+      return 'Forbidden' , status.HTTP_403_FORBIDDEN
 
   secret_key = request.args.get("secret_key")
 
@@ -145,7 +151,7 @@ def sonos_playlist():
 
   try:
     play_playlist(room, play_list, room_volume)
-    flash("Playing %s in %s at %s volume" % (play_list, room, room_volume), 'success')
+    flash("Playing %s in %s at %s volume" % (play_list, room, str(room_volume)), 'success')
     return redirect("/?secret_key=%s" % (secret_key))
     #return ("Playing %s in %s at %s volume" % (play_list, room, room_volume))
   except Exception as e:
