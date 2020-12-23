@@ -1,7 +1,7 @@
 FROM python:3.6-alpine
 COPY . /app
 WORKDIR /app
-RUN rm config.py
+RUN rm -f config.py
 RUN mv config.py.default config.py
 
 # Port to expose
