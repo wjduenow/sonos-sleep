@@ -2,7 +2,7 @@
 
 # set the input pin
 IN_PIN=19
-WEBHOOK=https://my-awesome-endpoint.dev/build-id
+WEBHOOK=http://wjduenow.myqnapcloud.com/sleep?room=Brynn&secret_key=mixelplk
 LOCK_FILE=/tmp/yolo.lock
 
 # set the state direction of the pin
