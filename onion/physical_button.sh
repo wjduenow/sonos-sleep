@@ -8,6 +8,9 @@ then
     exit
 fi
 
+#Remove Lock File if still present
+[ -f $LOCK_FILE ] && rm $LOCK_FILE  
+
 # set the input pin
 IN_PIN=19
 WEBHOOK=http://wjduenow.myqnapcloud.com/sleep?room=Brynn&secret_key=mixelplk
