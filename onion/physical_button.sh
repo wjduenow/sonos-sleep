@@ -1,5 +1,13 @@
 #!/bin/ash
 
+#Check to see if curl is installed, if not then install
+if ! curl -V COMMAND &> /dev/null
+then
+    echo "COMMAND could not be found, installing curl"
+    opkg install curl
+    exit
+fi
+
 # set the input pin
 IN_PIN=19
 WEBHOOK=http://wjduenow.myqnapcloud.com/sleep?room=Brynn&secret_key=mixelplk
