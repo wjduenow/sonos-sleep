@@ -13,7 +13,8 @@ from flask import render_template
 from flask import flash, redirect
 from flask_api import status
 import soco
-from pyHS100 import SmartPlug
+import asyncio
+from kasa import SmartPlug
 #from pprint import pformat as pf
 import time
 import socket
@@ -43,7 +44,8 @@ def list_play_lists():
 
   try:
     plug = SmartPlug(NIGHT_LIGHT_POWER_PLUG)
-    plug_state = plug.state
+    asyncio.run(plug.update())
+    plug_state = plug.is_on
   except:
     plug_state = "unknown"
 
@@ -162,12 +164,13 @@ def sonos_playlist():
 def brynn_night_light(state = "Off"):
   
   plug = SmartPlug(NIGHT_LIGHT_POWER_PLUG)
+  asyncio.run(plug.update())
 
   if state == "On":
-    plug.turn_on()
+    asyncio.run(plug.turn_on())
     plug.led = False
   else:
-    plug.turn_off()
+    asyncio.run(plug.turn_off())
     plug.led = True
 
 def play_playlist(room, playlist_name, volume):

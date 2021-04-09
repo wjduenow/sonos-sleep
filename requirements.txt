@@ -8,7 +8,7 @@ idna==2.8
 itsdangerous==1.1.0
 Jinja2>=2.10.1
 MarkupSafe==1.1.1
-pyHS100==0.3.5.2
+python-kasa==0.4.0.dev2
 requests==2.21.0
 soco==0.20
 typing==3.6.6
