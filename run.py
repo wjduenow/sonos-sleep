@@ -168,10 +168,11 @@ def brynn_night_light(state = "Off"):
 
   if state == "On":
     asyncio.run(plug.turn_on())
-    plug.led = False
+    asyncio.run(plug.set_led(False))
   else:
     asyncio.run(plug.turn_off())
-    plug.led = True
+    asyncio.run(plug.set_led(True))
+    
 
 def play_playlist(room, playlist_name, volume):
 
@@ -199,11 +200,11 @@ def get_plug_ip():
    return socket.gethostbyname(POWER_PLUG)
 
 
-if __name__ == '__main__':
-    #app.run(host='192.168.86.34', port=8999)
-    app.run(host=HOST_IP, port=8999)
+#if __name__ == '__main__':
+#    #app.run(host='192.168.86.34', port=8999)
+#    app.run(host=HOST_IP, port=8999)
 
 
-#if __name__ == "__main__":
-#    app.run(host='0.0.0.0')
+if __name__ == "__main__":
+    app.run(host='0.0.0.0')
 
