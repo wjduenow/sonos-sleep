@@ -147,7 +147,11 @@ def sonos_playlist():
   if request.args.get('play_list'):
       play_list = request.args.get('play_list')
 
-  room_volume = ROOMS[room]['volume']
+  try:
+    room_volume = ROOMS[room]['volume']
+  except:
+    room_volume = 30
+
   if request.args.get('room_volume'):
       room_volume = request.args.get('room_volume')
 
@@ -200,11 +204,11 @@ def get_plug_ip():
    return socket.gethostbyname(POWER_PLUG)
 
 
-#if __name__ == '__main__':
-#    #app.run(host='192.168.86.34', port=8999)
-#    app.run(host=HOST_IP, port=8999)
+if __name__ == '__main__':
+    #app.run(host='192.168.86.34', port=8999)
+    app.run(host=HOST_IP, port=8999)
 
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+#if __name__ == "__main__":
+#    app.run(host='0.0.0.0')
 
