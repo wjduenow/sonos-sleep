@@ -1,4 +1,4 @@
-ROOMS = {"Master Bedroom": {"volume": 25}, "Hayes": {"volume": 35}, "Brynn": {"volume": 35}, "Living Room": {"volume": 25}, "Sitting Room": {"volume": 30}, "Nursery": {"volume": 25}}
+ROOMS = {"Master Bedroom": {"volume": 25}, "Hayes": {"volume": 35}, "Brynn": {"volume": 35}, "Living Room": {"volume": 25}, "Sitting Room": {"volume": 30}, "Nursery": {"volume": 75}}
 NIGHT_LIGHT_POWER_PLUG = '192.168.86.113'
 SECRET_KEY = 'mixelplk'
 #HOST_IP = "192.168.86.34"

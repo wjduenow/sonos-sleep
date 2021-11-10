@@ -184,6 +184,8 @@ def play_playlist(room, playlist_name, volume):
   for zone in zones:
       print(zone.player_name)
       if zone.player_name == room:
+          ## Removing Target Player from Any Groups it may be in
+          zone.unjoin()
           sonos = zone
 
   playlists = sonos.get_sonos_playlists()
