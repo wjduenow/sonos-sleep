@@ -61,7 +61,7 @@ def list_play_lists():
       pl_tracks = []
       dict_play_lists[playlist.title] = pl_tracks
 
-  return render_template('list_play_lists.html', zones = zones, dict_play_lists = dict_play_lists, plug_state = plug_state, secret_key = app.secret_key)
+  return render_template('list_play_lists.html', zones = zones, dict_play_lists = dict_play_lists, plug_state = plug_state, secret_key = app.secret_key, rooms = ROOMS)
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
