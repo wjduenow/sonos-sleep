@@ -83,10 +83,6 @@ def sleep():
   if content:
       room = content['Room_Name']
 
-  #Manage Lights if Girls Room
-  if room == "Brynn":
-    brynn_night_light("On")
-
   try:
     play_playlist(room, 'Sleep', room_volume)
     flash("Running Sleep Routine in %s" %(str(room)), 'success')
@@ -105,10 +101,6 @@ def wake():
   room = "Master Bedroom"
   if request.args.get('room'):
       room = request.args.get('room')
-
-  #Manage Lights if Girls Room
-  if room == "Brynn":
-    brynn_night_light("Off")
 
   content = request.get_json(silent=True)
   if content:
