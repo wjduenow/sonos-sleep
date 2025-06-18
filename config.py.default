@@ -2,7 +2,7 @@ ROOMS = {
     "Master Bedroom": {"volume": 25}, 
     "Hayes": {"volume": 35}, 
     "Brynn": {"volume": 35}, 
-    "Ayomi": {"volume": 45}, 
+    "Master Bonus": {"volume": 45}, 
     "Portable": {"volume": 45}, 
     "Living Room": {"volume": 25}, 
     "Sitting Room": {"volume": 30}, 

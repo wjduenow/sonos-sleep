@@ -14,8 +14,6 @@ from flask import flash, redirect
 from flask_api import status
 import soco
 import asyncio
-from kasa import SmartPlug
-#from pprint import pformat as pf
 import time
 import socket
 from config import ROOMS, NIGHT_LIGHT_POWER_PLUG, SECRET_KEY, HOST_IP
@@ -43,13 +41,6 @@ def list_play_lists():
     zones = {'Example': {"player_name": "Example 3"}, 'Example 2': {"player_name": "Example 3"}, "Example 3": {"player_name": "Example 3"}}
 
   try:
-    plug = SmartPlug(NIGHT_LIGHT_POWER_PLUG)
-    asyncio.run(plug.update())
-    plug_state = plug.is_on
-  except:
-    plug_state = "unknown"
-
-  try:
     playlists = sonos.get_sonos_playlists()
   except:
     playlists = {}
@@ -61,7 +52,7 @@ def list_play_lists():
       pl_tracks = []
       dict_play_lists[playlist.title] = pl_tracks
 
-  return render_template('list_play_lists.html', zones = zones, dict_play_lists = dict_play_lists, plug_state = plug_state, secret_key = app.secret_key, rooms = ROOMS)
+  return render_template('list_play_lists.html', zones = zones, dict_play_lists = dict_play_lists, secret_key = app.secret_key, rooms = ROOMS)
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
@@ -154,21 +145,8 @@ def sonos_playlist():
     #return ("Playing %s in %s at %s volume" % (play_list, room, room_volume))
   except Exception as e:
      flash("error: %s in (room: %s)" % (e, room), 'error')
-     #return ("error: %s in (room: %s)" % (e, room))
+     #return ("error: %s in (room: %s)" % (e, room))    
 
-
-def brynn_night_light(state = "Off"):
-  
-  plug = SmartPlug(NIGHT_LIGHT_POWER_PLUG)
-  asyncio.run(plug.update())
-
-  if state == "On":
-    asyncio.run(plug.turn_on())
-    asyncio.run(plug.set_led(False))
-  else:
-    asyncio.run(plug.turn_off())
-    asyncio.run(plug.set_led(True))
-    
 
 def play_playlist(room, playlist_name, volume):
 
@@ -198,11 +176,11 @@ def get_plug_ip():
    return socket.gethostbyname(POWER_PLUG)
 
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
     #app.run(host='192.168.86.34', port=8999)
-    app.run(host=HOST_IP, port=8999)
+#    app.run(host=HOST_IP, port=8999)
 
 
-#if __name__ == "__main__":
-#    app.run(host='0.0.0.0')
+if __name__ == "__main__":
+    app.run(host='0.0.0.0')
 
