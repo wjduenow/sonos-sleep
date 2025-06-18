@@ -4,8 +4,10 @@ FROM python:3.9-slim-bullseye
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      libev-dev python3-dev \
-      && rm -rf /var/lib/apt/lists/*
+    build-essential \
+    libev-dev \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY . /app
 WORKDIR /app
