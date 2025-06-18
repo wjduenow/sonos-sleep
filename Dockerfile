@@ -1,6 +1,7 @@
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
 FROM python:3.9-slim-bullseye
+
+# Tell every subsequent RUN to use Bash (so <( … ) works)
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       libev-dev python3-dev \
