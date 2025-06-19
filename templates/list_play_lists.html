@@ -53,11 +53,12 @@
 <br />
 
 <h1>Play Lists</h1>
-  {% for pl in dict_play_lists %}
+  {% for pl in playlists %}
   <div class="row">
     <div class="col-md-12">
-      <h2>{{ pl }} <input type="button" class="btn" data-toggle="collapse" data-target="#toggleDemo_{{ pl }}" value="V">
-      <small>Play In: 
+      <h2>{{ pl }}
+        <button type="button" class="btn playlist-toggle" data-toggle="collapse" data-target="#toggleDemo_{{ loop.index }}" data-playlist="{{ pl }}">V</button>
+      <small>Play In:
        {% for zone in zones %}
          <a  class="btn btn-primary btn-xs" role="button" href="/sonos_playlist?play_list={{ pl }}&room={{ zone.player_name }}&secret_key={{ secret_key }}">{{ zone.player_name }}</a>
        {% endfor %}
@@ -67,20 +68,42 @@
 
   </div>
   <div class="row">
-    <div class="col-md-12" id="toggleDemo_{{ pl }}" class="collapse in">
-      <ol>
-        {% for t in dict_play_lists[pl] %}
-          <li>{{ t.title }} - <b>{{ t.creator }}</b> - <i>{{ t.album }}</i></li>
-        {% endfor %}
-      </ol>
+    <div class="col-md-12 collapse" id="toggleDemo_{{ loop.index }}">
+        <!-- Track list will be populated here -->
     </div>
   </div>
-  {% endfor %}  <!-- End For dict_play_lists -->
+  {% endfor %}  <!-- End For playlists -->
 </div>
 
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="{{ url_for('static',filename='js/bootstrap.min.js') }}"></script>
+
+    <script>
+    $(function(){
+        $('.playlist-toggle').on('click', function(){
+            var target = $(this).data('target');
+            var $targetDiv = $(target);
+            var isLoaded = $targetDiv.data('loaded');
+            if(!isLoaded){
+                var plName = $(this).data('playlist');
+                $.getJSON('/playlist_tracks', {play_list: plName, secret_key: '{{ secret_key }}'}, function(data){
+                    if(Array.isArray(data)){
+                        var $ol = $('<ol>');
+                        $.each(data, function(i, track){
+                            var text = track.title + ' - ' + track.creator + ' - ' + track.album;
+                            $ol.append($('<li>').text(text));
+                        });
+                        $targetDiv.append($ol);
+                        $targetDiv.data('loaded', true);
+                    } else if(data.error){
+                        $targetDiv.append($('<p class="text-danger">').text(data.error));
+                    }
+                });
+            }
+        });
+    });
+    </script>
   </body>
 </html>

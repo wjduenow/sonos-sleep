@@ -10,7 +10,7 @@ sys.path.append(vendor_dir)
 from flask import Flask
 from flask import request
 from flask import render_template
-from flask import flash, redirect
+from flask import flash, redirect, jsonify
 from flask_api import status
 import soco
 import asyncio
@@ -32,42 +32,32 @@ def list_play_lists():
   if request.args.get("secret_key") != app.secret_key:
       return 'Forbidden' , status.HTTP_403_FORBIDDEN
 
-  zones = soco.discover() #(interface_addr=wsl_ip)
+  zones = soco.discover()  # returns a set or None
+
+  sonos = None
   if zones:
-    for zone in zones:
-        sonos = zone
-        if zone.player_name == "Living Room":
-            sonos = zone
+      # Choose a default player
+      sonos = next(iter(zones))
+      # Prefer the Living Room player if it exists
+      for zone in zones:
+          if zone.player_name == "Living Room":
+              sonos = zone
+              break
   else:
-    zones = {'Example': {"player_name": "Example 3"}, 'Example 2': {"player_name": "Example 3"}, "Example 3": {"player_name": "Example 3"}}
+      # When running without any Sonos system, fall back to demo data
+      zones = []
 
-  try:
-    playlists = sonos.get_sonos_playlists()
-  except:
-    playlists = {}
-
-  dict_play_lists = {}
-
-
-  for playlist in playlists:
-      # Fetch tracks inside the Sonos playlist so we can display them
+  # Fetch playlists only if we have a valid Sonos object
+  playlists = []
+  if sonos is not None:
       try:
-          if hasattr(sonos, 'browse'):
-              browse_result = sonos.browse(playlist)
-          else:
-              browse_result = sonos.music_library.browse(playlist)
-          if hasattr(browse_result, 'item_list'):
-              pl_tracks = browse_result.item_list
-          else:
-              # SearchResult is also iterable; cast to list
-              pl_tracks = list(browse_result) if browse_result else []
+        playlists = sonos.get_sonos_playlists()
       except Exception as e:
-          print(f"Error browsing playlist {playlist.title}: {e}")
-          # Fallback: if browse is not available, leave empty list
-          pl_tracks = []
-      dict_play_lists[playlist.title] = pl_tracks
+        print(f"Error fetching Sonos playlists: {e}")
 
-  return render_template('list_play_lists.html', zones = zones, dict_play_lists = dict_play_lists, secret_key = app.secret_key, rooms = ROOMS)
+  playlist_titles = [pl.title for pl in playlists]
+
+  return render_template('list_play_lists.html', zones = zones, playlists = playlist_titles, secret_key = app.secret_key, rooms = ROOMS)
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
@@ -162,6 +152,56 @@ def sonos_playlist():
      flash("error: %s in (room: %s)" % (e, room), 'error')
      #return ("error: %s in (room: %s)" % (e, room))    
 
+# ---------------------------------------------------------
+#   API ENDPOINTS
+# ---------------------------------------------------------
+
+
+@app.route('/playlist_tracks', methods=['GET'])
+def playlist_tracks():
+
+  """Return tracks for the requested Sonos playlist as JSON."""
+
+  if request.args.get("secret_key") != app.secret_key:
+      return jsonify({"error": "Forbidden"}), status.HTTP_403_FORBIDDEN
+
+  playlist_name = request.args.get("play_list")
+  if not playlist_name:
+      return jsonify({"error": "Missing play_list parameter"}), status.HTTP_400_BAD_REQUEST
+
+  room = request.args.get("room", "Living Room")
+
+  zones = soco.discover()
+  if not zones:
+      return jsonify([])
+
+  # Select zone
+  sonos = next((z for z in zones if z.player_name == room), list(zones)[0])
+
+  try:
+      playlists = sonos.get_sonos_playlists()
+  except Exception as e:
+      return jsonify({"error": f"Unable to fetch playlists: {e}"}), status.HTTP_500_INTERNAL_SERVER_ERROR
+
+  target_playlist = next((pl for pl in playlists if pl.title == playlist_name), None)
+  if target_playlist is None:
+      return jsonify([])
+
+  try:
+      browse_result = sonos.browse(target_playlist) if hasattr(sonos, 'browse') else sonos.music_library.browse(target_playlist)
+      pl_tracks = browse_result.item_list if hasattr(browse_result, 'item_list') else list(browse_result or [])
+
+      tracks_json = [
+          {
+              "title": getattr(t, 'title', ''),
+              "creator": getattr(t, 'creator', ''),
+              "album": getattr(t, 'album', '')
+          } for t in pl_tracks
+      ]
+
+      return jsonify(tracks_json)
+  except Exception as e:
+      return jsonify({"error": f"Error fetching tracks: {e}"})
 
 def play_playlist(room, playlist_name, volume):
 
