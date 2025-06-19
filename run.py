@@ -52,8 +52,13 @@ def list_play_lists():
       # Fetch tracks inside the Sonos playlist so we can display them
       try:
           browse_result = sonos.browse(playlist)
-          pl_tracks = browse_result.get('item_list', []) if isinstance(browse_result, dict) else browse_result
-      except Exception:
+          if hasattr(browse_result, 'item_list'):
+              pl_tracks = browse_result.item_list
+          else:
+              # SearchResult is also iterable; cast to list
+              pl_tracks = list(browse_result) if browse_result else []
+      except Exception as e:
+          print(f"Error browsing playlist {playlist.title}: {e}")
           # Fallback: if browse is not available, leave empty list
           pl_tracks = []
       dict_play_lists[playlist.title] = pl_tracks
