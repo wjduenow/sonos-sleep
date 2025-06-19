@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  sonos-sleep:
+    container_name: sonos-sleep
+    image: sonos-sleep
+    restart: unless-stopped
+    network_mode: host
+#    ports:
+#      - "5000:5000"
