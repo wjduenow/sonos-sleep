@@ -14,9 +14,12 @@ WORKDIR /app
 RUN rm -f config.py && mv config.py.default config.py
 
 # ---- Python deps ----
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+ && pip install --no-cache-dir --only-binary=:all: bjoern==3.2.2 \
+ && grep -v '^bjoern' requirements.txt > /tmp/req.txt \
+ && pip install --no-cache-dir -r /tmp/req.txt \
+ && rm /tmp/req.txt
 
 EXPOSE 5000
-#CMD ["bjoern", "run:app", "0.0.0.0", "5000"]
-CMD ["python", "run.py", "--host", "0.0.0.0"]
+CMD ["bjoern", "run:app", "0.0.0.0", "5000"]
 
