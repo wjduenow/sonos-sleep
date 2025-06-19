@@ -36,15 +36,18 @@ def list_play_lists():
 
   sonos = None
   if zones:
-      # Choose a default player
-      sonos = next(iter(zones))
+      zones = sorted(list(zones), key=lambda z: z.player_name)
+
+      # Choose a default player (first in sorted list)
+      sonos = zones[0]
+
       # Prefer the Living Room player if it exists
       for zone in zones:
           if zone.player_name == "Living Room":
               sonos = zone
               break
   else:
-      # When running without any Sonos system, fall back to demo data
+      # When running without any Sonos system, fall back to empty list
       zones = []
 
   # Fetch playlists only if we have a valid Sonos object
@@ -57,7 +60,9 @@ def list_play_lists():
 
   playlist_titles = [pl.title for pl in playlists]
 
-  return render_template('list_play_lists.html', zones = zones, playlists = playlist_titles, secret_key = app.secret_key, rooms = ROOMS)
+  sorted_rooms = sorted(ROOMS.items())
+
+  return render_template('list_play_lists.html', zones = zones, playlists = playlist_titles, secret_key = app.secret_key, rooms = sorted_rooms)
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
