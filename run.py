@@ -49,7 +49,13 @@ def list_play_lists():
 
 
   for playlist in playlists:
-      pl_tracks = []
+      # Fetch tracks inside the Sonos playlist so we can display them
+      try:
+          browse_result = sonos.browse(playlist)
+          pl_tracks = browse_result.get('item_list', []) if isinstance(browse_result, dict) else browse_result
+      except Exception:
+          # Fallback: if browse is not available, leave empty list
+          pl_tracks = []
       dict_play_lists[playlist.title] = pl_tracks
 
   return render_template('list_play_lists.html', zones = zones, dict_play_lists = dict_play_lists, secret_key = app.secret_key, rooms = ROOMS)
