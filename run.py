@@ -24,6 +24,7 @@ from config import ROOMS, NIGHT_LIGHT_POWER_PLUG, SECRET_KEY, HOST_IP
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
+wsl_ip = "192.168.68.131"
 
 @app.route('/', methods=['GET', 'POST'])
 def list_play_lists():
@@ -31,7 +32,7 @@ def list_play_lists():
   if request.args.get("secret_key") != app.secret_key:
       return 'Forbidden' , status.HTTP_403_FORBIDDEN
 
-  zones = soco.discover()
+  zones = soco.discover(interface_addr=wsl_ip)
   if zones:
     for zone in zones:
         sonos = zone
