@@ -145,9 +145,9 @@ body{background:#fff8f2;}
   {% for pl in playlists %}
    <div class="playlist-col">
     <div class="panel panel-default room-card playlist-card" style="margin-bottom:10px;">
-      <div class="panel-heading d-flex justify-content-between align-items-center">
+      <div class="panel-heading playlist-heading d-flex justify-content-between align-items-center">
           <strong>{{ pl }}</strong>
-          <div class="playlist-btn-group d-flex">
+          <div class="playlist-btn-group">
             <button type="button" class="btn btn-primary btn-xs playlist-play-btn" data-playlist="{{ pl }}"><span class="glyphicon glyphicon-play"></span></button>
             <button type="button" class="btn btn-info btn-xs playlist-toggle" data-toggle="collapse" data-target="#toggleDemo_{{ loop.index }}" data-playlist="{{ pl }}"><span class="glyphicon glyphicon-list"></span></button>
           </div>
@@ -337,6 +337,18 @@ $(function(){
     padding:0;
     border-radius:50%;
     margin-left:8px;
+}
+
+.playlist-heading{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.playlist-btn-group{
+    display:flex;
+    flex-wrap:nowrap;
+    align-items:center;
 }
 </style>
 
