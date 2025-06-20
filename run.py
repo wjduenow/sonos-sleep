@@ -359,6 +359,53 @@ def room_status():
   except Exception as e:
      return jsonify({"error": str(e)})
 
+# ---------------------------------------------------------
+#   Next / Previous track
+# ---------------------------------------------------------
+
+
+def _find_sonos(room):
+    zones = soco.discover()
+    if not zones:
+        return None
+    for z in zones:
+        if z.player_name == room:
+            return z
+    return None
+
+
+def _simple_control(route, action_fn):
+    if request.args.get("secret_key") != app.secret_key:
+        return 'Forbidden', http_status.HTTP_403_FORBIDDEN
+
+    secret_key = request.args.get("secret_key")
+    room = request.args.get('room', 'Master Bedroom')
+
+    sonos = _find_sonos(room)
+    if sonos is None:
+        return "Room not found", http_status.HTTP_404_NOT_FOUND
+
+    try:
+        action_fn(sonos)
+    except Exception as e:
+        return f"error: {e}", http_status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    if request.args.get('ajax') == '1':
+        return jsonify({'status': 'ok'})
+
+    flash(f"{route.title()} track in {room}", 'success')
+    return redirect(f"/?secret_key={secret_key}")
+
+
+@app.route('/next', methods=['GET', 'POST'])
+def room_next():
+    return _simple_control('next', lambda s: s.next())
+
+
+@app.route('/previous', methods=['GET', 'POST'])
+def room_previous():
+    return _simple_control('previous', lambda s: s.previous())
+
 # create mapping for http_status.* names used in code
 class _HttpCodes:
     HTTP_403_FORBIDDEN = HTTPStatus.FORBIDDEN

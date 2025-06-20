@@ -128,6 +128,8 @@ body{background:#fff8f2;}
               <a class="btn btn-info btn-xs volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#">-</a>
               <span class="room-volume" data-room="{{ zone.player_name }}" style="margin:0 12px;">Vol --</span>
               <a class="btn btn-info btn-xs volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#">+</a>
+              <a class="btn btn-warning btn-xs track-btn" data-dir="prev" data-room="{{ zone.player_name }}" href="#" style="margin-left:12px;"><span class="glyphicon glyphicon-step-backward"></span></a>
+              <a class="btn btn-warning btn-xs track-btn" data-dir="next" data-room="{{ zone.player_name }}" href="#" style="margin-left:8px;"><span class="glyphicon glyphicon-step-forward"></span></a>
               <a  class="btn btn-success btn-xs room-action ml-auto" style="margin-left:12px;" data-action="play" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-play"></span></a>
             </p>
           </div>
@@ -314,6 +316,24 @@ $(function(){
       if(!selectedPlaylist) return;
       // Redirect to server route to start playlist
       window.location = '/sonos_playlist?play_list='+encodeURIComponent(selectedPlaylist)+'&room='+encodeURIComponent(room)+'&secret_key='+secretKey;
+  });
+
+  // next / previous track
+  $(document).on('click', '.track-btn', function(e){
+      e.preventDefault();
+      var room = $(this).data('room');
+      var dir = $(this).data('dir');
+      var endpoint = dir === 'next' ? '/next' : '/previous';
+      $.getJSON(endpoint, {room: room, secret_key: secretKey, ajax: 1}, function(res){
+          if(res.status === 'ok'){
+              showStatus(dir === 'next' ? 'Skipped to Next' : 'Went to Previous');
+              // refresh track info quickly
+              $('.track-info[data-room="'+room+'"]').text('Loading...');
+              setTimeout(function(){
+                  $('#room_'+$('.room-action[data-room="'+room+'"]').closest('.panel-collapse').attr('id').split('_')[1]).data('loaded', false).collapse('show');
+              }, 500);
+          }
+      });
   });
 });
 </script>
