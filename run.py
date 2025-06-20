@@ -16,7 +16,7 @@ import soco
 import asyncio
 import time
 import socket
-from config import ROOMS, NIGHT_LIGHT_POWER_PLUG, SECRET_KEY, HOST_IP
+from config import ROOMS, SECRET_KEY
 
 
 
@@ -61,6 +61,8 @@ def list_play_lists():
   playlist_titles = [pl.title for pl in playlists]
 
   sorted_rooms = sorted(ROOMS.items())
+  print(ROOMS)
+  print(sorted_rooms)
 
   return render_template('list_play_lists.html', zones = zones, playlists = playlist_titles, secret_key = app.secret_key, rooms = sorted_rooms)
 
