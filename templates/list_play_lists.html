@@ -266,21 +266,39 @@ $(function(){
       if($panel.data('loaded')) return;
 
       var room = $panel.closest('.panel').find('.room-action').data('room');
-      $.getJSON('/room_status', {room: room, secret_key: secretKey, ajax: 1}, function(res){
-          if(res.status === 'ok'){
-              $('.track-info[data-room="'+room+'"]').text(res.track);
-              $('.room-volume[data-room="'+room+'"]').text('Vol '+res.volume);
+      // initial fetch then start polling
+      const updateRoomStatus = function(){
+          $.getJSON('/room_status', {room: room, secret_key: secretKey, ajax: 1}, function(res){
+              if(res.status === 'ok'){
+                  $('.track-info[data-room="'+room+'"]').text(res.track);
+                  $('.room-volume[data-room="'+room+'"]').text('Vol '+res.volume);
 
-              var $btn = $('.room-action[data-room="'+room+'"]');
-              if(res.is_playing){
-                  $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning').text('Pause');
-              }else{
-                  $btn.data('action','play').removeClass('btn-warning').addClass('btn-success').text('Play');
+                  var $btn = $('.room-action[data-room="'+room+'"]');
+                  var action = res.is_playing ? 'pause' : 'play';
+                  if(action === 'pause'){
+                      $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning').text('Pause');
+                  }else{
+                      $btn.data('action','play').removeClass('btn-warning').addClass('btn-success').text('Play');
+                  }
               }
+          });
+      };
 
-              $panel.data('loaded', true);
-          }
-      });
+      updateRoomStatus();
+
+      var pollId = setInterval(updateRoomStatus, 5000);
+      $panel.data('pollId', pollId);
+      $panel.data('loaded', true);
+  });
+
+  // Stop polling when card collapses
+  $('#roomsAccordion').on('hide.bs.collapse', function(e){
+      var $panel = $(e.target);
+      var pollId = $panel.data('pollId');
+      if(pollId){
+          clearInterval(pollId);
+          $panel.removeData('pollId');
+      }
   });
 
   // Playlist play flow
