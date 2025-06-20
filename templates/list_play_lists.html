@@ -9,6 +9,22 @@
 
 <div id="statusOverlay">Status</div>
 
+<style>
+#statusOverlay{
+  display:none;
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 10px 25px;
+  border-radius: 4px;
+  font-weight: bold;
+  z-index: 1050;
+}
+</style>
+
 {% with messages = get_flashed_messages(with_categories=true) %}
   <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
   {% if messages %}
@@ -108,7 +124,7 @@
 <script>
 function showStatus(msg){
   var $ov = $('#statusOverlay');
-  $ov.text(msg).fadeIn(200).delay(1000).fadeOut(400);
+  $ov.text(msg).fadeIn(200).delay(7000).fadeOut(400);
 }
 
 $(function(){
@@ -122,12 +138,15 @@ $(function(){
       var endpoint = action === 'pause' ? '/wake' : '/play';
       $.getJSON(endpoint, {room: room, secret_key: secretKey, ajax: 1}, function(res){
           if(res.status === 'ok'){
+              var msg;
               if(res.is_playing){
                   $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning').text('Pause');
+                  msg = 'Playback Started';
               }else{
                   $btn.data('action','play').removeClass('btn-warning').addClass('btn-success').text('Play');
+                  msg = 'Playback Paused';
               }
-              showStatus(action.charAt(0).toUpperCase()+action.slice(1)+' executed');
+              showStatus(msg);
           }
       });
   });
@@ -140,7 +159,7 @@ $(function(){
       $.getJSON('/volume', {room: room, change: change, secret_key: secretKey, ajax: 1}, function(res){
           if(res.status === 'ok'){
               $('.room-volume[data-room="'+room+'"]').text('Vol '+res.volume);
-              showStatus('Volume '+res.volume);
+              showStatus('Volume Updated to '+res.volume);
           }
       });
   });
