@@ -41,6 +41,35 @@
 .playlist-card .panel-heading{background:#ffffff;border:none;padding:10px 15px;}
 </style>
 
+<style>
+/* Warm color palette overrides */
+body{background:#fff8f2;}
+
+/* Card headings and bodies */
+.panel-heading{background:#ffe8d9 !important;}
+.panel-body{background:#fff5ed !important;}
+
+/* Buttons */
+.btn-primary{background-color:#ff7b54;border-color:#ff7b54;}
+.btn-primary:hover{background-color:#ff693a;border-color:#ff693a;}
+
+.btn-info{background-color:#ffb26b;border-color:#ffb26b;color:#fff;}
+.btn-info:hover{background-color:#ffa34f;border-color:#ffa34f;}
+
+.btn-success{background-color:#ff9b6a;border-color:#ff9b6a;}
+.btn-success:hover{background-color:#ff8650;border-color:#ff8650;}
+
+.btn-warning{background-color:#ffad60;border-color:#ffad60;}
+.btn-warning:hover{background-color:#ff9b42;border-color:#ff9b42;}
+
+/* Panel border */
+.panel-default{border-color:#ffd8bf;}
+
+.section-title{color:#d45d00;}
+
+#statusOverlay{background:rgba(255,135,90,.95);} 
+</style>
+
 {% with messages = get_flashed_messages(with_categories=true) %}
   <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
   {% if messages %}
