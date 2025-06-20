@@ -7,6 +7,8 @@
 
 <body>
 
+<div id="statusOverlay">Status</div>
+
 {% with messages = get_flashed_messages(with_categories=true) %}
   <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
   {% if messages %}
@@ -35,14 +37,14 @@
           <div class="panel-body">
             <p>{{ current_info[zone.player_name].track }}</p>
             <p>
-              <a class="btn btn-info btn-xs" role="button" href="/volume?room={{ zone.player_name }}&change=down&secret_key={{ secret_key }}">-</a>
-              <span style="margin:0 5px;">Vol {{ current_info[zone.player_name].volume }}</span>
-              <a class="btn btn-info btn-xs" role="button" href="/volume?room={{ zone.player_name }}&change=up&secret_key={{ secret_key }}">+</a>
+              <a class="btn btn-info btn-xs volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#">-</a>
+              <span class="room-volume" data-room="{{ zone.player_name }}" style="margin:0 5px;">Vol {{ current_info[zone.player_name].volume }}</span>
+              <a class="btn btn-info btn-xs volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#">+</a>
             </p>
             {% if current_info[zone.player_name].is_playing %}
-              <a  class="btn btn-warning btn-xs" role="button" href="/wake?room={{ zone.player_name }}&secret_key={{ secret_key }}">Pause</a>
+              <a  class="btn btn-warning btn-xs room-action" data-action="pause" data-room="{{ zone.player_name }}" href="#">Pause</a>
             {% else %}
-              <a  class="btn btn-success btn-xs" role="button" href="/play?room={{ zone.player_name }}&secret_key={{ secret_key }}">Play</a>
+              <a  class="btn btn-success btn-xs room-action" data-action="play" data-room="{{ zone.player_name }}" href="#">Play</a>
             {% endif %}
           </div>
         </div>
@@ -106,5 +108,47 @@
         });
     });
     </script>
+
+<script>
+function showStatus(msg){
+  var $ov = $('#statusOverlay');
+  $ov.text(msg).fadeIn(200).delay(1000).fadeOut(400);
+}
+
+$(function(){
+  var secretKey = '{{ secret_key }}';
+
+  $(document).on('click', '.room-action', function(e){
+      e.preventDefault();
+      var $btn = $(this);
+      var room = $btn.data('room');
+      var action = $btn.data('action');
+      var endpoint = action === 'pause' ? '/wake' : '/play';
+      $.getJSON(endpoint, {room: room, secret_key: secretKey, ajax: 1}, function(res){
+          if(res.status === 'ok'){
+              if(res.is_playing){
+                  $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning').text('Pause');
+              }else{
+                  $btn.data('action','play').removeClass('btn-warning').addClass('btn-success').text('Play');
+              }
+              showStatus(action.charAt(0).toUpperCase()+action.slice(1)+' executed');
+          }
+      });
+  });
+
+  $(document).on('click', '.volume-btn', function(e){
+      e.preventDefault();
+      var $btn = $(this);
+      var room = $btn.data('room');
+      var change = $btn.data('change');
+      $.getJSON('/volume', {room: room, change: change, secret_key: secretKey, ajax: 1}, function(res){
+          if(res.status === 'ok'){
+              $('.room-volume[data-room="'+room+'"]').text('Vol '+res.volume);
+              showStatus('Volume '+res.volume);
+          }
+      });
+  });
+});
+</script>
   </body>
 </html>

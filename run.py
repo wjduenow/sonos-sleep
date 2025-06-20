@@ -139,7 +139,9 @@ def wake():
 
     sonos.pause()
 
-    #return "Running Wake Routine in %s" %(str(room))
+    if request.args.get('ajax') == '1':
+        return jsonify({'status': 'ok', 'is_playing': False})
+
     flash("Running Wake Routine in %s" %(str(room)), 'success')
     return redirect("/?secret_key=%s" % (secret_key))
 
@@ -282,6 +284,9 @@ def room_play():
 
     sonos.play()
 
+    if request.args.get('ajax') == '1':
+        return jsonify({'status': 'ok', 'is_playing': True})
+
     flash("Resumed playback in %s" % (room), 'success')
     return redirect("/?secret_key=%s" % (secret_key))
 
@@ -322,6 +327,9 @@ def room_volume():
         new_vol = min(current_vol + STEP, 100)
 
     sonos.volume = new_vol
+
+    if request.args.get('ajax') == '1':
+        return jsonify({'status': 'ok', 'volume': new_vol})
 
     flash("Set volume in %s to %s" % (room, new_vol), 'info')
     return redirect("/?secret_key=%s" % (secret_key))
