@@ -129,14 +129,14 @@ body{background:#fff8f2;}
                 <div class="flex-grow-1 room-detail">
                    <p class="track-info" data-room="{{ zone.player_name }}">Loading...</p>
                    <div class="room-controls volume-controls">
-                      <a class="btn btn-info btn-xs volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#">-</a>
-                      <span class="room-volume" data-room="{{ zone.player_name }}">Vol --</span>
-                      <a class="btn btn-info btn-xs volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#">+</a>
+                      <a class="btn btn-info btn-xs circle-btn volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-minus"></span></a>
+                      <span class="room-volume circle-btn" data-room="{{ zone.player_name }}">--</span>
+                      <a class="btn btn-info btn-xs circle-btn volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-plus"></span></a>
                    </div>
                    <div class="room-controls playback-controls" style="margin-top:6px;">
-                      <a class="btn btn-warning btn-xs track-btn" data-dir="prev" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-step-backward"></span></a>
-                      <a  class="btn btn-success btn-xs room-action" data-action="play" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-play"></span></a>
-                      <a class="btn btn-warning btn-xs track-btn" data-dir="next" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-step-forward"></span></a>
+                      <a class="btn btn-warning btn-xs circle-btn track-btn" data-dir="prev" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-step-backward"></span></a>
+                      <a  class="btn btn-success btn-xs circle-btn room-action" data-action="play" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-play"></span></a>
+                      <a class="btn btn-warning btn-xs circle-btn track-btn" data-dir="next" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-step-forward"></span></a>
                    </div>
                 </div>
             </div>
@@ -443,12 +443,31 @@ function fetchAlbumArt(room,title,artist){
  }
 
 .album-art{
-    width:64px;
-    height:64px;
+    width:120px;
+    height:120px;
     object-fit:cover;
     border-radius:4px;
     margin-right:10px;
     background:#e9e9e9;
+}
+</style>
+
+<style>
+.circle-btn{
+    width:56px;
+    height:56px;
+    display:flex !important;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    padding:0;
+    border-radius:50%;
+}
+
+.room-volume.circle-btn{
+    background:#fff8f2;
+    font-size:18px;
+    line-height:56px;
 }
 </style>
 
