@@ -124,14 +124,14 @@ body{background:#fff8f2;}
         <div id="room_{{ loop.index0 }}" class="panel-collapse collapse">
           <div class="panel-body">
             <p class="track-info" data-room="{{ zone.player_name }}">Loading...</p>
-            <p class="d-flex align-items-center">
-              <a class="btn btn-info btn-xs volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#">-</a>
-              <span class="room-volume" data-room="{{ zone.player_name }}" style="margin:0 12px;">Vol --</span>
-              <a class="btn btn-info btn-xs volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#">+</a>
-              <a class="btn btn-warning btn-xs track-btn" data-dir="prev" data-room="{{ zone.player_name }}" href="#" style="margin-left:12px;"><span class="glyphicon glyphicon-step-backward"></span></a>
-              <a  class="btn btn-success btn-xs room-action" data-action="play" data-room="{{ zone.player_name }}" href="#" style="margin-left:8px;"><span class="glyphicon glyphicon-play"></span></a>
-              <a class="btn btn-warning btn-xs track-btn" data-dir="next" data-room="{{ zone.player_name }}" href="#" style="margin-left:8px;"><span class="glyphicon glyphicon-step-forward"></span></a>
-            </p>
+            <div class="room-controls">
+                  <a class="btn btn-info btn-xs volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#">-</a>
+                  <span class="room-volume" data-room="{{ zone.player_name }}">Vol --</span>
+                  <a class="btn btn-info btn-xs volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#">+</a>
+                  <a class="btn btn-warning btn-xs track-btn" data-dir="prev" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-step-backward"></span></a>
+                  <a  class="btn btn-success btn-xs room-action" data-action="play" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-play"></span></a>
+                  <a class="btn btn-warning btn-xs track-btn" data-dir="next" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-step-forward"></span></a>
+              </div>
           </div>
         </div>
       </div>
@@ -391,6 +391,19 @@ $(function(){
     display:flex;
     flex-wrap:nowrap;
     align-items:center;
+}
+</style>
+
+<style>
+.room-controls{
+    display:flex;
+    flex-wrap:nowrap;
+    align-items:center;
+    gap:8px;
+}
+
+.room-controls .room-volume{
+    white-space:nowrap;
 }
 </style>
 
