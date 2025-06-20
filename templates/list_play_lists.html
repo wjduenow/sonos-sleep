@@ -23,13 +23,22 @@
 <div class="container">
 
   <h1>Rooms</h1>
-  <div class="row">
+  <div class="panel-group" id="roomsAccordion">
     {% for zone in zones %}
-      <div class="col-md-4">
-        <div class="panel panel-default">
-          <div class="panel-heading"><strong>{{ zone.player_name }}</strong></div>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" href="#room_{{ loop.index0 }}">{{ zone.player_name }}</a>
+          </h4>
+        </div>
+        <div id="room_{{ loop.index0 }}" class="panel-collapse collapse {% if current_info[zone.player_name].is_playing %}in{% endif %}">
           <div class="panel-body">
             <p>{{ current_info[zone.player_name].track }}</p>
+            <p>
+              <a class="btn btn-info btn-xs" role="button" href="/volume?room={{ zone.player_name }}&change=down&secret_key={{ secret_key }}">-</a>
+              <span style="margin:0 5px;">Vol {{ current_info[zone.player_name].volume }}</span>
+              <a class="btn btn-info btn-xs" role="button" href="/volume?room={{ zone.player_name }}&change=up&secret_key={{ secret_key }}">+</a>
+            </p>
             {% if current_info[zone.player_name].is_playing %}
               <a  class="btn btn-warning btn-xs" role="button" href="/wake?room={{ zone.player_name }}&secret_key={{ secret_key }}">Pause</a>
             {% else %}

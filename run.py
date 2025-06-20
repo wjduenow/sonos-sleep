@@ -15,7 +15,6 @@ from flask_api import status
 import soco
 import asyncio
 import time
-import socket
 from config import ROOMS, SECRET_KEY
 
 
@@ -74,13 +73,16 @@ def list_play_lists():
 
           state = zone.get_current_transport_info().get('current_transport_state', '')
           is_playing = state == 'PLAYING'
+          vol = zone.volume
       except Exception:
           desc = 'Unknown'
           is_playing = False
+          vol = 0
 
       current_info[zone.player_name] = {
           'track': desc,
-          'is_playing': is_playing
+          'is_playing': is_playing,
+          'volume': vol
       }
 
   return render_template('list_play_lists.html', zones = zones, playlists = playlist_titles, secret_key = app.secret_key, current_info=current_info)
@@ -253,9 +255,6 @@ def play_playlist(room, playlist_name, volume):
   sonos.volume = volume
   sonos.play()
 
-def get_plug_ip():
-   return socket.gethostbyname(POWER_PLUG)
-
 
 # ---------------------------------------------------------
 #   Room playback control (resume)
@@ -289,6 +288,46 @@ def room_play():
   except Exception as e:
      return ("error: %s" % (e))
 
+# ---------------------------------------------------------
+#   Volume control
+# ---------------------------------------------------------
+
+
+@app.route('/volume', methods=['GET', 'POST'])
+def room_volume():
+
+  if request.args.get("secret_key") != app.secret_key:
+      return 'Forbidden' , status.HTTP_403_FORBIDDEN
+
+  secret_key = request.args.get("secret_key")
+
+  room = request.args.get('room')
+  change = request.args.get('change', 'up')  # up / down
+
+  STEP = 5
+
+  try:
+    zones = soco.discover()
+    for zone in zones:
+        if zone.player_name == room:
+            sonos = zone
+            break
+    else:
+        return "Room not found", status.HTTP_404_NOT_FOUND
+
+    current_vol = sonos.volume or 0
+    if change == 'down':
+        new_vol = max(current_vol - STEP, 0)
+    else:
+        new_vol = min(current_vol + STEP, 100)
+
+    sonos.volume = new_vol
+
+    flash("Set volume in %s to %s" % (room, new_vol), 'info')
+    return redirect("/?secret_key=%s" % (secret_key))
+
+  except Exception as e:
+     return ("error: %s" % (e))
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
