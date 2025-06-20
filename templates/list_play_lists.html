@@ -373,7 +373,7 @@ function fetchAlbumArt(room,title,artist){
         success: function(r){
             if(r.results && r.results.length){
                 // The API returns 100x100 artwork by default; request a higher-res version
-                var artUrl = r.results[0].artworkUrl100.replace(/100x100[^/]*$/, '250x250bb');
+                var artUrl = r.results[0].artworkUrl100.replace(/100x100/, '250x250');
                 $img.attr('src', artUrl).data('loaded', true);
             }
         }
