@@ -352,6 +352,8 @@ def room_status():
     return jsonify({
         'status': 'ok',
         'track': desc,
+        'title': title,
+        'artist': artist,
         'is_playing': is_playing,
         'volume': vol
     })

@@ -124,15 +124,22 @@ body{background:#fff8f2;}
         </div>
         <div id="room_{{ loop.index0 }}" class="panel-collapse collapse">
           <div class="panel-body">
-            <p class="track-info" data-room="{{ zone.player_name }}">Loading...</p>
-            <div class="room-controls">
-                  <a class="btn btn-info btn-xs volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#">-</a>
-                  <span class="room-volume" data-room="{{ zone.player_name }}">Vol --</span>
-                  <a class="btn btn-info btn-xs volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#">+</a>
-                  <a class="btn btn-warning btn-xs track-btn" data-dir="prev" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-step-backward"></span></a>
-                  <a  class="btn btn-success btn-xs room-action" data-action="play" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-play"></span></a>
-                  <a class="btn btn-warning btn-xs track-btn" data-dir="next" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-step-forward"></span></a>
-              </div>
+            <div class="d-flex">
+                <img src="" alt="art" class="album-art" data-room="{{ zone.player_name }}" />
+                <div class="flex-grow-1 room-detail">
+                   <p class="track-info" data-room="{{ zone.player_name }}">Loading...</p>
+                   <div class="room-controls volume-controls">
+                      <a class="btn btn-info btn-xs volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#">-</a>
+                      <span class="room-volume" data-room="{{ zone.player_name }}">Vol --</span>
+                      <a class="btn btn-info btn-xs volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#">+</a>
+                   </div>
+                   <div class="room-controls playback-controls" style="margin-top:6px;">
+                      <a class="btn btn-warning btn-xs track-btn" data-dir="prev" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-step-backward"></span></a>
+                      <a  class="btn btn-success btn-xs room-action" data-action="play" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-play"></span></a>
+                      <a class="btn btn-warning btn-xs track-btn" data-dir="next" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-step-forward"></span></a>
+                   </div>
+                </div>
+            </div>
           </div>
         </div>
       </div>
@@ -278,6 +285,9 @@ $(function(){
                   $('.track-info[data-room="'+room+'"]').text(res.track);
                   $('.room-volume[data-room="'+room+'"]').text('Vol '+res.volume);
 
+                  // album art
+                  fetchAlbumArt(room, res.title, res.artist);
+
                   var $btn = $('.room-action[data-room="'+room+'"]');
                   var action = res.is_playing ? 'pause' : 'play';
                   if(action === 'pause'){
@@ -341,6 +351,24 @@ $(function(){
       });
   });
 });
+
+// album art
+function fetchAlbumArt(room,title,artist){
+    if(!title) return;
+    var $img = $('.album-art[data-room="'+room+'"]');
+    if($img.data('loaded')) return;
+
+    var query = encodeURIComponent('recording:"'+title+'" AND artist:"'+artist+'"');
+    $.getJSON('https://musicbrainz.org/ws/2/recording', {query: query, fmt:'json', limit:1}, function(r){
+        if(r.recordings && r.recordings.length){
+            var rel = r.recordings[0].releases && r.recordings[0].releases[0];
+            if(rel && rel.id){
+                var artUrl = 'https://coverartarchive.org/release/'+rel.id+'/front-250';
+                $img.attr('src', artUrl).data('loaded', true);
+            }
+        }
+    });
+}
 </script>
 
 <style>
@@ -406,6 +434,21 @@ $(function(){
 
 .room-controls .room-volume{
     white-space:nowrap;
+}
+</style>
+
+<style>
+.room-controls .room-volume{
+     white-space:nowrap;
+ }
+
+.album-art{
+    width:64px;
+    height:64px;
+    object-fit:cover;
+    border-radius:4px;
+    margin-right:10px;
+    background:#e9e9e9;
 }
 </style>
 
