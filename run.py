@@ -11,7 +11,7 @@ from flask import Flask
 from flask import request
 from flask import render_template
 from flask import flash, redirect, jsonify
-from flask_api import status
+from http import HTTPStatus
 import soco
 import asyncio
 import time
@@ -29,7 +29,7 @@ app.secret_key = SECRET_KEY
 def list_play_lists():
 
   if request.args.get("secret_key") != app.secret_key:
-      return 'Forbidden' , status.HTTP_403_FORBIDDEN
+      return 'Forbidden' , http_status.HTTP_403_FORBIDDEN
 
   zones = soco.discover()  # returns a set or None
 
@@ -66,7 +66,7 @@ def list_play_lists():
 def sleep():
 
   if request.args.get("secret_key") != app.secret_key:
-      return 'Forbidden' , status.HTTP_403_FORBIDDEN
+      return 'Forbidden' , http_status.HTTP_403_FORBIDDEN
 
   secret_key = request.args.get("secret_key")
 
@@ -93,7 +93,7 @@ def sleep():
 def wake():
 
   if request.args.get("secret_key") != app.secret_key:
-      return 'Forbidden' , status.HTTP_403_FORBIDDEN
+      return 'Forbidden' , http_status.HTTP_403_FORBIDDEN
 
   secret_key = request.args.get("secret_key")
 
@@ -128,7 +128,7 @@ def sonos_playlist():
 
 
   if request.args.get("secret_key") != app.secret_key:
-      return 'Forbidden' , status.HTTP_403_FORBIDDEN
+      return 'Forbidden' , http_status.HTTP_403_FORBIDDEN
 
   secret_key = request.args.get("secret_key")
 
@@ -168,11 +168,11 @@ def playlist_tracks():
   """Return tracks for the requested Sonos playlist as JSON."""
 
   if request.args.get("secret_key") != app.secret_key:
-      return jsonify({"error": "Forbidden"}), status.HTTP_403_FORBIDDEN
+      return jsonify({"error": "Forbidden"}), http_status.HTTP_403_FORBIDDEN
 
   playlist_name = request.args.get("play_list")
   if not playlist_name:
-      return jsonify({"error": "Missing play_list parameter"}), status.HTTP_400_BAD_REQUEST
+      return jsonify({"error": "Missing play_list parameter"}), http_status.HTTP_400_BAD_REQUEST
 
   room = request.args.get("room", "Living Room")
 
@@ -186,7 +186,7 @@ def playlist_tracks():
   try:
       playlists = sonos.get_sonos_playlists()
   except Exception as e:
-      return jsonify({"error": f"Unable to fetch playlists: {e}"}), status.HTTP_500_INTERNAL_SERVER_ERROR
+      return jsonify({"error": f"Unable to fetch playlists: {e}"}), http_status.HTTP_500_INTERNAL_SERVER_ERROR
 
   target_playlist = next((pl for pl in playlists if pl.title == playlist_name), None)
   if target_playlist is None:
@@ -242,7 +242,7 @@ def play_playlist(room, playlist_name, volume):
 def room_play():
 
   if request.args.get("secret_key") != app.secret_key:
-      return 'Forbidden' , status.HTTP_403_FORBIDDEN
+      return 'Forbidden' , http_status.HTTP_403_FORBIDDEN
 
   secret_key = request.args.get("secret_key")
 
@@ -255,7 +255,7 @@ def room_play():
             sonos = zone
             break
     else:
-        return "Room not found", status.HTTP_404_NOT_FOUND
+        return "Room not found", http_status.HTTP_404_NOT_FOUND
 
     sonos.play()
 
@@ -277,7 +277,7 @@ def room_play():
 def room_volume():
 
   if request.args.get("secret_key") != app.secret_key:
-      return 'Forbidden' , status.HTTP_403_FORBIDDEN
+      return 'Forbidden' , http_status.HTTP_403_FORBIDDEN
 
   secret_key = request.args.get("secret_key")
 
@@ -293,7 +293,7 @@ def room_volume():
             sonos = zone
             break
     else:
-        return "Room not found", status.HTTP_404_NOT_FOUND
+        return "Room not found", http_status.HTTP_404_NOT_FOUND
 
     current_vol = sonos.volume or 0
     if change == 'down':
@@ -321,11 +321,11 @@ def room_volume():
 def room_status():
 
   if request.args.get("secret_key") != app.secret_key:
-      return jsonify({"error": "Forbidden"}), status.HTTP_403_FORBIDDEN
+      return jsonify({"error": "Forbidden"}), http_status.HTTP_403_FORBIDDEN
 
   room = request.args.get('room')
   if not room:
-      return jsonify({"error": "Missing room"}), status.HTTP_400_BAD_REQUEST
+      return jsonify({"error": "Missing room"}), http_status.HTTP_400_BAD_REQUEST
 
   try:
     zones = soco.discover()
@@ -334,7 +334,7 @@ def room_status():
             sonos = zone
             break
     else:
-        return jsonify({"error": "Room not found"}), status.HTTP_404_NOT_FOUND
+        return jsonify({"error": "Room not found"}), http_status.HTTP_404_NOT_FOUND
 
     # Track info
     try:
@@ -358,6 +358,15 @@ def room_status():
 
   except Exception as e:
      return jsonify({"error": str(e)})
+
+# create mapping for http_status.* names used in code
+class _HttpCodes:
+    HTTP_403_FORBIDDEN = HTTPStatus.FORBIDDEN
+    HTTP_400_BAD_REQUEST = HTTPStatus.BAD_REQUEST
+    HTTP_404_NOT_FOUND = HTTPStatus.NOT_FOUND
+    HTTP_500_INTERNAL_SERVER_ERROR = HTTPStatus.INTERNAL_SERVER_ERROR
+
+http_status = _HttpCodes
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
