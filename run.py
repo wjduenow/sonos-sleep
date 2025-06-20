@@ -436,6 +436,55 @@ def room_next():
 def room_previous():
     return _simple_control('previous', lambda s: s.previous())
 
+# ---------------------------------------------------------
+#   Seek within current track
+# ---------------------------------------------------------
+
+
+@app.route('/seek', methods=['GET', 'POST'])
+def room_seek():
+
+    if request.args.get("secret_key") != app.secret_key:
+        return 'Forbidden', http_status.HTTP_403_FORBIDDEN
+
+    secret_key = request.args.get("secret_key")
+
+    room = request.args.get('room', 'Master Bedroom')
+
+    # Accept position in seconds (int) or HH:MM:SS string
+    position_sec = request.args.get('position_sec')
+    position_str = request.args.get('position')  # alternative param
+
+    if position_sec is None and position_str is None:
+        return 'Missing position', http_status.HTTP_400_BAD_REQUEST
+
+    # convert seconds to HH:MM:SS if provided as seconds
+    if position_str is None:
+        try:
+            sec = int(float(position_sec))
+        except ValueError:
+            return 'Invalid position', http_status.HTTP_400_BAD_REQUEST
+
+        h = sec // 3600
+        m = (sec % 3600) // 60
+        s = sec % 60
+        position_str = f"{h:02d}:{m:02d}:{s:02d}"
+
+    sonos = _find_sonos(room)
+    if sonos is None:
+        return "Room not found", http_status.HTTP_404_NOT_FOUND
+
+    try:
+        sonos.seek(position_str)
+    except Exception as e:
+        return f"error: {e}", http_status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    if request.args.get('ajax') == '1':
+        return jsonify({'status': 'ok'})
+
+    flash(f"Seeked to {position_str} in {room}", 'info')
+    return redirect(f"/?secret_key={secret_key}")
+
 # create mapping for http_status.* names used in code
 class _HttpCodes:
     HTTP_403_FORBIDDEN = HTTPStatus.FORBIDDEN

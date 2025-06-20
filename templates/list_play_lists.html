@@ -129,7 +129,7 @@ body{background:#fff8f2;}
                 <div class="flex-grow-1 room-detail">
                    <p class="track-info" data-room="{{ zone.player_name }}">Loading...</p>
                    <!-- Progress bar -->
-                   <div class="progress track-progress" style="height:6px;margin-bottom:6px;">
+                   <div class="progress track-progress" data-room="{{ zone.player_name }}" style="height:6px;margin-bottom:6px; cursor:pointer;">
                        <div class="progress-bar" role="progressbar" style="width:0%;" data-room="{{ zone.player_name }}"></div>
                    </div>
                    <div class="room-controls volume-controls">
@@ -433,6 +433,29 @@ $(function(){
           }
       });
   });
+
+  // Seek on progress bar click
+  $(document).on('click', '.track-progress', function(e){
+      // Determine room & duration
+      var $container = $(this);
+      var room = $container.data('room');
+      var duration = $container.data('duration');
+      if(!duration || duration === 0) return; // can't seek
+
+      var offsetX = e.pageX - $container.offset().left;
+      var pct = offsetX / $container.width();
+      pct = Math.max(0, Math.min(pct,1));
+      var posSec = Math.round(pct * duration);
+
+      // Optimistically update UI
+      updateProgressBar(room, duration, posSec);
+
+      $.getJSON('/seek', {room: room, position_sec: posSec, secret_key: secretKey, ajax: 1}, function(res){
+          if(res.status === 'ok'){
+              showStatus('Seeked to '+Math.floor(posSec/60)+':'+('0'+(posSec%60)).slice(-2));
+          }
+      });
+  });
 });
 
 // album art
@@ -463,9 +486,10 @@ function fetchAlbumArt(room,title,artist){
     });
 }
 
-// Helper to update progress bar width
+// Helper to update progress bar
 function updateProgressBar(room,durationSec,posSec){
-    var $bar = $('.progress-bar[data-room="'+room+'"]');
+    var $container = $('.track-progress[data-room="'+room+'"]');
+    var $bar = $container.find('.progress-bar');
     if(!$bar.length) return;
     if(!durationSec || durationSec === 0){
         $bar.css('width','0%');
@@ -473,6 +497,8 @@ function updateProgressBar(room,durationSec,posSec){
     }
     var pct = Math.min((posSec/durationSec)*100, 100);
     $bar.css('width', pct + '%');
+    // store duration for later use (seek)
+    $container.data('duration', durationSec);
 }
 </script>
 
