@@ -358,12 +358,22 @@ function fetchAlbumArt(room,title,artist){
     var $img = $('.album-art[data-room="'+room+'"]');
     if($img.data('loaded')) return;
 
-    var q = 'recording:"'+title+'" AND artist:"'+artist+'"';
-    $.getJSON('https://musicbrainz.org/ws/2/recording', {query: q, fmt:'json', limit:1}, function(r){
-        if(r.recordings && r.recordings.length){
-            var rel = r.recordings[0].releases && r.recordings[0].releases[0];
-            if(rel && rel.id){
-                var artUrl = 'https://coverartarchive.org/release/'+rel.id+'/front-250';
+    // Build search term combining title and artist for better accuracy
+    var q = (title + ' ' + artist).trim();
+
+    // Use the public iTunes Search API (no token required). We request JSONP to avoid any CORS issues.
+    $.ajax({
+        url: 'https://itunes.apple.com/search',
+        dataType: 'jsonp',
+        data: {
+            term: q,
+            entity: 'song',
+            limit: 1
+        },
+        success: function(r){
+            if(r.results && r.results.length){
+                // The API returns 100x100 artwork by default; request a higher-res version
+                var artUrl = r.results[0].artworkUrl100.replace(/100x100[^/]*$/, '250x250bb');
                 $img.attr('src', artUrl).data('loaded', true);
             }
         }
@@ -443,13 +453,24 @@ function fetchAlbumArt(room,title,artist){
  }
 
 .album-art{
-    width:120px;
-    height:120px;
+    /* Right-side artwork needs to fill half of the card */
+    flex:0 0 50%;          /* occupy 50% of the horizontal space */
+    width:100%;            /* take full width of its flex column */
+    height:auto;           /* maintain aspect ratio */
+    max-height:160px;      /* reasonable upper bound so card doesn't grow too tall */
     object-fit:cover;
     border-radius:4px;
-    margin-right:10px;
+    margin-left:10px;      /* gap between controls and art */
     background:#e9e9e9;
 }
+</style>
+
+<style>
+/* Make the two halves (controls and album art) equal width */
+.room-card .d-flex{display:flex;}
+.room-card .room-detail{flex:0 0 50%;}
+.room-card .album-art{order:2;} /* push art to the right */
+.room-card .room-detail{order:1;}
 </style>
 
 <style>
