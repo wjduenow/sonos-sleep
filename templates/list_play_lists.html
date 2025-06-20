@@ -285,7 +285,12 @@ $(function(){
                   $('.track-info[data-room="'+room+'"]').text(res.track);
                   $('.room-volume[data-room="'+room+'"]').text('Vol '+res.volume);
 
-                  // album art
+                  // Refresh album art if track changed
+                  var $img = $('.album-art[data-room="'+room+'"]');
+                  if($img.data('current') !== res.title){
+                      $img.data('loaded', false); // allow re-fetch
+                      $img.data('current', res.title);
+                  }
                   fetchAlbumArt(room, res.title, res.artist);
 
                   var $btn = $('.room-action[data-room="'+room+'"]');
