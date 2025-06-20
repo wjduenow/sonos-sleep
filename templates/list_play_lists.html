@@ -22,31 +22,23 @@
 
 <div class="container">
 
+  <h1>Rooms</h1>
   <div class="row">
-    <div class="col-md-3">
-      <h1>Settings</h1>
-    </div>
-    <div class="col-md-9">
-       <h1>
-       {% for zone in zones %}
-            <h6>{{ zone.player_name }}({{ rooms[zone.player_name] }})</h6>
-       {% endfor %}
-       </h1>
-    </div>
-  </div>
-
-
-  <div class="row">
-    <div class="col-md-3">
-      <h1>Mute Rooms</h1>
-    </div>
-    <div class="col-md-9">
-       <h1>
-       {% for zone in zones %}
-            <a  class="btn btn-primary btn-sm" role="button" href="/wake?room={{ zone.player_name }}&secret_key={{ secret_key }}">{{ zone.player_name }}</a>
-       {% endfor %}
-       </h1>
-    </div>
+    {% for zone in zones %}
+      <div class="col-md-4">
+        <div class="panel panel-default">
+          <div class="panel-heading"><strong>{{ zone.player_name }}</strong></div>
+          <div class="panel-body">
+            <p>{{ current_info[zone.player_name].track }}</p>
+            {% if current_info[zone.player_name].is_playing %}
+              <a  class="btn btn-warning btn-xs" role="button" href="/wake?room={{ zone.player_name }}&secret_key={{ secret_key }}">Pause</a>
+            {% else %}
+              <a  class="btn btn-success btn-xs" role="button" href="/play?room={{ zone.player_name }}&secret_key={{ secret_key }}">Play</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
   </div>
 
 

@@ -60,11 +60,30 @@ def list_play_lists():
 
   playlist_titles = [pl.title for pl in playlists]
 
-  sorted_rooms = sorted(ROOMS.items())
-  print(ROOMS)
-  print(sorted_rooms)
+  # Gather current playing information for each zone
+  current_info = {}
+  for zone in zones:
+      try:
+          track_info = zone.get_current_track_info()
+          title = track_info.get('title', '')
+          artist = track_info.get('artist', '') or track_info.get('creator', '')
+          if title:
+              desc = f"{title} - {artist}" if artist else title
+          else:
+              desc = 'Nothing playing'
 
-  return render_template('list_play_lists.html', zones = zones, playlists = playlist_titles, secret_key = app.secret_key, rooms = sorted_rooms)
+          state = zone.get_current_transport_info().get('current_transport_state', '')
+          is_playing = state == 'PLAYING'
+      except Exception:
+          desc = 'Unknown'
+          is_playing = False
+
+      current_info[zone.player_name] = {
+          'track': desc,
+          'is_playing': is_playing
+      }
+
+  return render_template('list_play_lists.html', zones = zones, playlists = playlist_titles, secret_key = app.secret_key, current_info=current_info)
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
@@ -238,9 +257,37 @@ def get_plug_ip():
    return socket.gethostbyname(POWER_PLUG)
 
 
-#if __name__ == '__main__':
-    #app.run(host='192.168.86.34', port=8999)
-#    app.run(host=HOST_IP, port=8999)
+# ---------------------------------------------------------
+#   Room playback control (resume)
+# ---------------------------------------------------------
+
+
+@app.route('/play', methods=['GET', 'POST'])
+def room_play():
+
+  if request.args.get("secret_key") != app.secret_key:
+      return 'Forbidden' , status.HTTP_403_FORBIDDEN
+
+  secret_key = request.args.get("secret_key")
+
+  room = request.args.get('room', 'Master Bedroom')
+
+  try:
+    zones = soco.discover()
+    for zone in zones:
+        if zone.player_name == room:
+            sonos = zone
+            break
+    else:
+        return "Room not found", status.HTTP_404_NOT_FOUND
+
+    sonos.play()
+
+    flash("Resumed playback in %s" % (room), 'success')
+    return redirect("/?secret_key=%s" % (secret_key))
+
+  except Exception as e:
+     return ("error: %s" % (e))
 
 
 if __name__ == "__main__":
