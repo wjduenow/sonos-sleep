@@ -129,8 +129,8 @@ body{background:#fff8f2;}
               <span class="room-volume" data-room="{{ zone.player_name }}" style="margin:0 12px;">Vol --</span>
               <a class="btn btn-info btn-xs volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#">+</a>
               <a class="btn btn-warning btn-xs track-btn" data-dir="prev" data-room="{{ zone.player_name }}" href="#" style="margin-left:12px;"><span class="glyphicon glyphicon-step-backward"></span></a>
+              <a  class="btn btn-success btn-xs room-action" data-action="play" data-room="{{ zone.player_name }}" href="#" style="margin-left:8px;"><span class="glyphicon glyphicon-play"></span></a>
               <a class="btn btn-warning btn-xs track-btn" data-dir="next" data-room="{{ zone.player_name }}" href="#" style="margin-left:8px;"><span class="glyphicon glyphicon-step-forward"></span></a>
-              <a  class="btn btn-success btn-xs room-action ml-auto" style="margin-left:12px;" data-action="play" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-play"></span></a>
             </p>
           </div>
         </div>
@@ -238,10 +238,12 @@ $(function(){
           if(res.status === 'ok'){
               var msg;
               if(res.is_playing){
-                  $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning').text('Pause');
+                  $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning');
+                  $btn.find('span').removeClass('glyphicon-play').addClass('glyphicon-pause');
                   msg = 'Playback Started';
               }else{
-                  $btn.data('action','play').removeClass('btn-warning').addClass('btn-success').text('Play');
+                  $btn.data('action','play').removeClass('btn-warning').addClass('btn-success');
+                  $btn.find('span').removeClass('glyphicon-pause').addClass('glyphicon-play');
                   msg = 'Playback Paused';
               }
               showStatus(msg);
@@ -278,9 +280,11 @@ $(function(){
                   var $btn = $('.room-action[data-room="'+room+'"]');
                   var action = res.is_playing ? 'pause' : 'play';
                   if(action === 'pause'){
-                      $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning').text('Pause');
+                      $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning');
+                      $btn.find('span').removeClass('glyphicon-play').addClass('glyphicon-pause');
                   }else{
-                      $btn.data('action','play').removeClass('btn-warning').addClass('btn-success').text('Play');
+                      $btn.data('action','play').removeClass('btn-warning').addClass('btn-success');
+                      $btn.find('span').removeClass('glyphicon-pause').addClass('glyphicon-play');
                   }
               }
           });
