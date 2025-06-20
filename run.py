@@ -59,33 +59,8 @@ def list_play_lists():
 
   playlist_titles = [pl.title for pl in playlists]
 
-  # Gather current playing information for each zone
-  current_info = {}
-  for zone in zones:
-      try:
-          track_info = zone.get_current_track_info()
-          title = track_info.get('title', '')
-          artist = track_info.get('artist', '') or track_info.get('creator', '')
-          if title:
-              desc = f"{title} - {artist}" if artist else title
-          else:
-              desc = 'Nothing playing'
-
-          state = zone.get_current_transport_info().get('current_transport_state', '')
-          is_playing = state == 'PLAYING'
-          vol = zone.volume
-      except Exception:
-          desc = 'Unknown'
-          is_playing = False
-          vol = 0
-
-      current_info[zone.player_name] = {
-          'track': desc,
-          'is_playing': is_playing,
-          'volume': vol
-      }
-
-  return render_template('list_play_lists.html', zones = zones, playlists = playlist_titles, secret_key = app.secret_key, current_info=current_info)
+  # Render without per-room status (will be fetched client-side)
+  return render_template('list_play_lists.html', zones = zones, playlists = playlist_titles, secret_key = app.secret_key)
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
@@ -336,6 +311,53 @@ def room_volume():
 
   except Exception as e:
      return ("error: %s" % (e))
+
+# ---------------------------------------------------------
+#   Room status (lazy load)
+# ---------------------------------------------------------
+
+
+@app.route('/room_status', methods=['GET'])
+def room_status():
+
+  if request.args.get("secret_key") != app.secret_key:
+      return jsonify({"error": "Forbidden"}), status.HTTP_403_FORBIDDEN
+
+  room = request.args.get('room')
+  if not room:
+      return jsonify({"error": "Missing room"}), status.HTTP_400_BAD_REQUEST
+
+  try:
+    zones = soco.discover()
+    for zone in zones:
+        if zone.player_name == room:
+            sonos = zone
+            break
+    else:
+        return jsonify({"error": "Room not found"}), status.HTTP_404_NOT_FOUND
+
+    # Track info
+    try:
+        track_info = sonos.get_current_track_info()
+        title = track_info.get('title', '')
+        artist = track_info.get('artist', '') or track_info.get('creator', '')
+        desc = f"{title} - {artist}" if title else 'Nothing playing'
+    except Exception:
+        desc = 'Unknown'
+
+    state = sonos.get_current_transport_info().get('current_transport_state', '')
+    is_playing = state == 'PLAYING'
+    vol = sonos.volume or 0
+
+    return jsonify({
+        'status': 'ok',
+        'track': desc,
+        'is_playing': is_playing,
+        'volume': vol
+    })
+
+  except Exception as e:
+     return jsonify({"error": str(e)})
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

@@ -33,19 +33,15 @@
             <a data-toggle="collapse" href="#room_{{ loop.index0 }}">{{ zone.player_name }}</a>
           </h4>
         </div>
-        <div id="room_{{ loop.index0 }}" class="panel-collapse collapse {% if current_info[zone.player_name].is_playing %}in{% endif %}">
+        <div id="room_{{ loop.index0 }}" class="panel-collapse collapse">
           <div class="panel-body">
-            <p>{{ current_info[zone.player_name].track }}</p>
+            <p class="track-info" data-room="{{ zone.player_name }}">Loading...</p>
             <p>
               <a class="btn btn-info btn-xs volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#">-</a>
-              <span class="room-volume" data-room="{{ zone.player_name }}" style="margin:0 5px;">Vol {{ current_info[zone.player_name].volume }}</span>
+              <span class="room-volume" data-room="{{ zone.player_name }}" style="margin:0 5px;">Vol --</span>
               <a class="btn btn-info btn-xs volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#">+</a>
             </p>
-            {% if current_info[zone.player_name].is_playing %}
-              <a  class="btn btn-warning btn-xs room-action" data-action="pause" data-room="{{ zone.player_name }}" href="#">Pause</a>
-            {% else %}
-              <a  class="btn btn-success btn-xs room-action" data-action="play" data-room="{{ zone.player_name }}" href="#">Play</a>
-            {% endif %}
+            <a  class="btn btn-success btn-xs room-action" data-action="play" data-room="{{ zone.player_name }}" href="#">Play</a>
           </div>
         </div>
       </div>
@@ -145,6 +141,29 @@ $(function(){
           if(res.status === 'ok'){
               $('.room-volume[data-room="'+room+'"]').text('Vol '+res.volume);
               showStatus('Volume '+res.volume);
+          }
+      });
+  });
+
+  // Lazy-load status when room card is expanded
+  $('#roomsAccordion').on('shown.bs.collapse', function(e){
+      var $panel = $(e.target);
+      if($panel.data('loaded')) return;
+
+      var room = $panel.closest('.panel').find('.room-action').data('room');
+      $.getJSON('/room_status', {room: room, secret_key: secretKey, ajax: 1}, function(res){
+          if(res.status === 'ok'){
+              $('.track-info[data-room="'+room+'"]').text(res.track);
+              $('.room-volume[data-room="'+room+'"]').text('Vol '+res.volume);
+
+              var $btn = $('.room-action[data-room="'+room+'"]');
+              if(res.is_playing){
+                  $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning').text('Pause');
+              }else{
+                  $btn.data('action','play').removeClass('btn-warning').addClass('btn-success').text('Play');
+              }
+
+              $panel.data('loaded', true);
           }
       });
   });
