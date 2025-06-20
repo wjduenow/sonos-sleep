@@ -126,10 +126,10 @@ body{background:#fff8f2;}
             <p class="track-info" data-room="{{ zone.player_name }}">Loading...</p>
             <p class="d-flex align-items-center">
               <a class="btn btn-info btn-xs volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#">-</a>
-              <span class="room-volume" data-room="{{ zone.player_name }}" style="margin:0 8px;">Vol --</span>
+              <span class="room-volume" data-room="{{ zone.player_name }}" style="margin:0 12px;">Vol --</span>
               <a class="btn btn-info btn-xs volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#">+</a>
+              <a  class="btn btn-success btn-xs room-action ml-auto" style="margin-left:12px;" data-action="play" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-play"></span></a>
             </p>
-            <a  class="btn btn-success btn-xs room-action" data-action="play" data-room="{{ zone.player_name }}" href="#">Play</a>
           </div>
         </div>
       </div>
@@ -295,5 +295,19 @@ $(function(){
   });
 });
 </script>
-  </body>
+
+<style>
+/* Larger buttons for room controls */
+.rooms-grid .btn-xs{
+    padding: 14px 22px;
+    font-size: 20px;
+    border-radius: 10px;
+}
+
+.rooms-grid .btn-xs.glyphicon{
+    font-size:24px;
+}
+</style>
+
+</body>
 </html>
