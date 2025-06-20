@@ -358,8 +358,8 @@ function fetchAlbumArt(room,title,artist){
     var $img = $('.album-art[data-room="'+room+'"]');
     if($img.data('loaded')) return;
 
-    var query = encodeURIComponent('recording:"'+title+'" AND artist:"'+artist+'"');
-    $.getJSON('https://musicbrainz.org/ws/2/recording', {query: query, fmt:'json', limit:1}, function(r){
+    var q = 'recording:"'+title+'" AND artist:"'+artist+'"';
+    $.getJSON('https://musicbrainz.org/ws/2/recording', {query: q, fmt:'json', limit:1}, function(r){
         if(r.recordings && r.recordings.length){
             var rel = r.recordings[0].releases && r.recordings[0].releases[0];
             if(rel && rel.id){
