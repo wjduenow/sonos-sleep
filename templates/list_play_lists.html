@@ -128,6 +128,10 @@ body{background:#fff8f2;}
                 <img src="" alt="art" class="album-art" data-room="{{ zone.player_name }}" />
                 <div class="flex-grow-1 room-detail">
                    <p class="track-info" data-room="{{ zone.player_name }}">Loading...</p>
+                   <!-- Progress bar -->
+                   <div class="progress track-progress" style="height:6px;margin-bottom:6px;">
+                       <div class="progress-bar" role="progressbar" style="width:0%;" data-room="{{ zone.player_name }}"></div>
+                   </div>
                    <div class="room-controls volume-controls">
                       <a class="btn btn-info btn-xs circle-btn volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-minus"></span></a>
                       <span class="room-volume circle-btn" data-room="{{ zone.player_name }}">--</span>
@@ -269,6 +273,9 @@ $(function(){
       var updateRoomModal = function(){
           $.getJSON('/room_status', {room: room, secret_key: secretKey, ajax: 1}, function(res){
               if(res.status === 'ok'){
+                  // Update progress bar
+                  updateProgressBar(room, res.duration_sec, res.position_sec);
+
                   $('.track-info[data-room="'+room+'"]').text(res.track);
                   $('.room-volume[data-room="'+room+'"]').text('Vol '+res.volume);
 
@@ -350,6 +357,9 @@ $(function(){
       const updateRoomStatus = function(){
           $.getJSON('/room_status', {room: room, secret_key: secretKey, ajax: 1}, function(res){
               if(res.status === 'ok'){
+                  // Update progress bar
+                  updateProgressBar(room, res.duration_sec, res.position_sec);
+
                   $('.track-info[data-room="'+room+'"]').text(res.track);
                   $('.room-volume[data-room="'+room+'"]').text('Vol '+res.volume);
 
@@ -451,6 +461,18 @@ function fetchAlbumArt(room,title,artist){
             }
         }
     });
+}
+
+// Helper to update progress bar width
+function updateProgressBar(room,durationSec,posSec){
+    var $bar = $('.progress-bar[data-room="'+room+'"]');
+    if(!$bar.length) return;
+    if(!durationSec || durationSec === 0){
+        $bar.css('width','0%');
+        return;
+    }
+    var pct = Math.min((posSec/durationSec)*100, 100);
+    $bar.css('width', pct + '%');
 }
 </script>
 
@@ -604,6 +626,13 @@ function fetchAlbumArt(room,title,artist){
 .room-modal-dialog .modal-content{
     max-height:90vh;
     overflow-y:auto;
+}
+</style>
+
+<style>
+/* Smoothly animate progress bar width between updates */
+.track-progress .progress-bar{
+    transition: width 5s linear;
 }
 </style>
 

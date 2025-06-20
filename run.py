@@ -337,13 +337,39 @@ def room_status():
         return jsonify({"error": "Room not found"}), http_status.HTTP_404_NOT_FOUND
 
     # Track info
+    title = ''
+    artist = ''
     try:
         track_info = sonos.get_current_track_info()
         title = track_info.get('title', '')
         artist = track_info.get('artist', '') or track_info.get('creator', '')
         desc = f"{title} - {artist}" if title else 'Nothing playing'
+
+        # Extract duration & position for progress bar
+        def _to_seconds(time_str):
+            """Convert Sonos HH:MM:SS (or MM:SS) time string to seconds."""
+            if not time_str:
+                return 0
+            try:
+                parts = [int(float(p)) for p in time_str.split(':') if p.isdigit()]
+            except ValueError:
+                return 0
+            if len(parts) == 3:
+                h, m, s = parts
+            elif len(parts) == 2:
+                h, m, s = 0, parts[0], parts[1]
+            elif len(parts) == 1:
+                h, m, s = 0, 0, parts[0]
+            else:
+                return 0
+            return h * 3600 + m * 60 + s
+
+        duration_sec = _to_seconds(track_info.get('duration', ''))
+        position_sec = _to_seconds(track_info.get('position', ''))
     except Exception:
         desc = 'Unknown'
+        duration_sec = 0
+        position_sec = 0
 
     state = sonos.get_current_transport_info().get('current_transport_state', '')
     is_playing = state == 'PLAYING'
@@ -355,7 +381,9 @@ def room_status():
         'title': title,
         'artist': artist,
         'is_playing': is_playing,
-        'volume': vol
+        'volume': vol,
+        'duration_sec': duration_sec,
+        'position_sec': position_sec
     })
 
   except Exception as e:
