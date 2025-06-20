@@ -12,6 +12,6 @@ requests==2.21.0
 soco==0.30.10
 typing==3.6.6
 urllib3==1.24.2
-Werkzeug==0.16.1
+Werkzeug>=3.0.6
 xmltodict==0.12.0
 gunicorn>=23.0.0
