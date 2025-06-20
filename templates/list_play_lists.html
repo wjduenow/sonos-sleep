@@ -588,9 +588,9 @@ function fetchAlbumArt(room,title,artist){
 }
 .room-modal-dialog .album-art{
     flex:0 0 auto;
-    width:60%;        /* nice size inside modal */
     width:100%;
     max-width:none;
+    max-height:60vh; /* image can grow but not exceed 60% of viewport */
     margin:0 auto 15px;
 }
 .room-modal-dialog .room-detail{
@@ -599,6 +599,11 @@ function fetchAlbumArt(room,title,artist){
 }
 .room-modal-dialog .room-controls{
     justify-content:center;
+}
+/* Modal should use up to 90% of viewport height */
+.room-modal-dialog .modal-content{
+    max-height:90vh;
+    overflow-y:auto;
 }
 </style>
 
