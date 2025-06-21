@@ -543,6 +543,9 @@ function updateProgressBar(room,durationSec,posSec, skipInit, skipOverrideGuard)
         return;
     }
 
+    var lastPos = $container.data('lastPos') || 0;
+    var isRewind = posSec < lastPos - 1; // if position went backwards significantly
+
     if(!skipInit && !$container.data('initialized')){
         $container.addClass('notrans');
         var $bar = $container.find('.progress-bar');
@@ -558,11 +561,21 @@ function updateProgressBar(room,durationSec,posSec, skipInit, skipOverrideGuard)
         var pct = Math.min((posSec/durationSec)*100, 100);
         var $bar = $container.find('.progress-bar');
         if(!$bar.length) return;
+        if(isRewind){
+            // jump instantly without animation when track restarts/changes
+            $container.addClass('notrans');
+        }
         $bar.css('width', pct + '%');
+        if(isRewind){
+            requestAnimationFrame(function(){
+                $container.removeClass('notrans');
+            });
+        }
     }
 
     // store duration for seeking
     $container.data('duration', durationSec);
+    $container.data('lastPos', posSec);
 
     // Update timers
     var $cur = $('.time-current[data-room="'+room+'"]');
