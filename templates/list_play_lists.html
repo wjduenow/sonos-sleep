@@ -132,7 +132,7 @@ body{background:#fff8f2;}
                    <div class="progress track-progress" data-room="{{ zone.player_name }}" style="height:6px;margin-bottom:2px; cursor:pointer;">
                        <div class="progress-bar" role="progressbar" style="width:0%;" data-room="{{ zone.player_name }}"></div>
                    </div>
-                   <div class="time-display d-flex justify-content-between" style="font-size:12px;">
+                   <div class="time-display d-flex justify-content-between" style="font-size:12px;width:100%;">
                        <span class="time-current" data-room="{{ zone.player_name }}">0:00</span>
                        <span class="time-remaining" data-room="{{ zone.player_name }}">-0:00</span>
                    </div>
@@ -438,27 +438,55 @@ $(function(){
       });
   });
 
-  // Seek on progress bar click
-  $(document).on('click', '.track-progress', function(e){
-      // Determine room & duration
+  // --- Drag seek logic ---
+  window.dragState = null; // global state {room, duration, $container, posSec}
+
+  function handleSeek(room,posSec,duration){
+      $.getJSON('/seek', {room: room, position_sec: posSec, secret_key: secretKey, ajax: 1}, function(res){
+          if(res.status === 'ok'){
+              showStatus('Seeked to '+fmt(posSec));
+          }
+      });
+  }
+
+  $(document).on('mousedown touchstart', '.track-progress', function(e){
+      e.preventDefault();
+      var isTouch = e.type === 'touchstart';
+      var evt = isTouch ? e.originalEvent.touches[0] : e;
       var $container = $(this);
       var room = $container.data('room');
       var duration = $container.data('duration');
-      if(!duration || duration === 0) return; // can't seek
+      if(!duration) return;
 
-      var offsetX = e.pageX - $container.offset().left;
-      var pct = offsetX / $container.width();
+      window.dragState = {room: room, duration: duration, $container: $container};
+
+      // Immediately update position at touch point
+      updateDrag(evt);
+  });
+
+  function updateDrag(evt){
+      if(!window.dragState) return;
+      var $c = window.dragState.$container;
+      var offsetX = evt.pageX - $c.offset().left;
+      var pct = offsetX / $c.width();
       pct = Math.max(0, Math.min(pct,1));
-      var posSec = Math.round(pct * duration);
+      var posSec = Math.round(pct * window.dragState.duration);
+      // temporarily flag skipping update from polling
+      window.dragState.posSec = posSec;
+      updateProgressBar(window.dragState.room, window.dragState.duration, posSec, /*skipInitCheck=*/false, /*skipOverrideGuard=*/true);
+  }
 
-      // Optimistically update UI
-      updateProgressBar(room, duration, posSec);
+  $(document).on('mousemove touchmove', function(e){
+      if(!window.dragState) return;
+      var isTouch = e.type === 'touchmove';
+      var evt = isTouch ? e.originalEvent.touches[0] : e;
+      updateDrag(evt);
+  });
 
-      $.getJSON('/seek', {room: room, position_sec: posSec, secret_key: secretKey, ajax: 1}, function(res){
-          if(res.status === 'ok'){
-              showStatus('Seeked to '+Math.floor(posSec/60)+':'+('0'+(posSec%60)).slice(-2));
-          }
-      });
+  $(document).on('mouseup touchend touchcancel', function(e){
+      if(!window.dragState) return;
+      handleSeek(window.dragState.room, window.dragState.posSec, window.dragState.duration);
+      window.dragState = null;
   });
 });
 
@@ -498,21 +526,24 @@ function fmt(sec){
     return m+":"+("0"+s).slice(-2);
 }
 
-function updateProgressBar(room,durationSec,posSec){
+function updateProgressBar(room,durationSec,posSec, skipInit, skipOverrideGuard){
     var $container = $('.track-progress[data-room="'+room+'"]');
-    var $bar = $container.find('.progress-bar');
-    if(!$bar.length) return;
+    if(!$container.length) return;
+
+    // If dragging this room, skip automatic updates unless explicitly told to override
+    if(!skipOverrideGuard && window.dragState && window.dragState.room === room) return;
 
     if(!durationSec || durationSec === 0){
-        $bar.css('width','0%');
+        var $bar0 = $container.find('.progress-bar');
+        if($bar0.length) $bar0.css('width','0%');
         return;
     }
 
-    var pct = Math.min((posSec/durationSec)*100, 100);
-
-    // First time: disable transition for instant positioning
-    if(!$container.data('initialized')){
+    if(!skipInit && !$container.data('initialized')){
         $container.addClass('notrans');
+        var $bar = $container.find('.progress-bar');
+        if(!$bar.length) return;
+        var pct = Math.min((posSec/durationSec)*100, 100);
         $bar.css('width', pct + '%');
         // re-enable transition after next paint
         requestAnimationFrame(function(){
@@ -520,6 +551,9 @@ function updateProgressBar(room,durationSec,posSec){
         });
         $container.data('initialized', true);
     }else{
+        var pct = Math.min((posSec/durationSec)*100, 100);
+        var $bar = $container.find('.progress-bar');
+        if(!$bar.length) return;
         $bar.css('width', pct + '%');
     }
 
@@ -699,12 +733,14 @@ function updateProgressBar(room,durationSec,posSec){
     content:"";
     position:absolute;
     right:0;
-    top:-4px;
-    width:12px;
-    height:12px;
+    top:-7px; /* place knob above bar */
+    width:18px;
+    height:18px;
     border-radius:50%;
     background:#ff7b54;
     transform:translateX(50%);
+    box-shadow:0 0 2px rgba(0,0,0,.4);
+    z-index:2;
 }
 </style>
 
@@ -712,6 +748,12 @@ function updateProgressBar(room,durationSec,posSec){
 /* hide transition for initial set */
 .track-progress.notrans .progress-bar{
     transition:none !important;
+}
+</style>
+
+<style>
+.track-progress{
+    overflow: visible !important;
 }
 </style>
 
