@@ -132,7 +132,7 @@ body{background:#fff8f2;}
                    <div class="progress track-progress" data-room="{{ zone.player_name }}" style="height:6px;margin-bottom:2px; cursor:pointer;">
                        <div class="progress-bar" role="progressbar" style="width:0%;" data-room="{{ zone.player_name }}"></div>
                    </div>
-                   <div class="time-display d-flex justify-content-between" style="font-size:12px;width:100%;">
+                   <div class="time-display" style="font-size:12px;width:100%;">
                        <span class="time-current" data-room="{{ zone.player_name }}">0:00</span>
                        <span class="time-remaining" data-room="{{ zone.player_name }}">-0:00</span>
                    </div>
@@ -459,6 +459,8 @@ $(function(){
       if(!duration) return;
 
       window.dragState = {room: room, duration: duration, $container: $container};
+      // Disable transition during drag for snappy response
+      $container.addClass('notrans');
 
       // Immediately update position at touch point
       updateDrag(evt);
@@ -486,6 +488,8 @@ $(function(){
   $(document).on('mouseup touchend touchcancel', function(e){
       if(!window.dragState) return;
       handleSeek(window.dragState.room, window.dragState.posSec, window.dragState.duration);
+      // Re-enable transition after drag completes
+      window.dragState.$container.removeClass('notrans');
       window.dragState = null;
   });
 });
@@ -754,6 +758,14 @@ function updateProgressBar(room,durationSec,posSec, skipInit, skipOverrideGuard)
 <style>
 .track-progress{
     overflow: visible !important;
+}
+</style>
+
+<style>
+.time-display{
+    display:flex;
+    justify-content:space-between;
+    width:100%;
 }
 </style>
 
