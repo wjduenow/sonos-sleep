@@ -17,5 +17,5 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 EXPOSE 5000
 #CMD ["gunicorn", "-b", "0.0.0.0:5000", "run:app"]
-CMD ["gunicorn", "-w", "3", "-b", "0.0.0.0:5000", "run:app"]
+CMD ["gunicorn", "-w", "5", "-b", "0.0.0.0:5000", "run:app"]
 

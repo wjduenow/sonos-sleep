@@ -129,8 +129,12 @@ body{background:#fff8f2;}
                 <div class="flex-grow-1 room-detail">
                    <p class="track-info" data-room="{{ zone.player_name }}">Loading...</p>
                    <!-- Progress bar -->
-                   <div class="progress track-progress" data-room="{{ zone.player_name }}" style="height:6px;margin-bottom:6px; cursor:pointer;">
+                   <div class="progress track-progress" data-room="{{ zone.player_name }}" style="height:6px;margin-bottom:2px; cursor:pointer;">
                        <div class="progress-bar" role="progressbar" style="width:0%;" data-room="{{ zone.player_name }}"></div>
+                   </div>
+                   <div class="time-display d-flex justify-content-between" style="font-size:12px;">
+                       <span class="time-current" data-room="{{ zone.player_name }}">0:00</span>
+                       <span class="time-remaining" data-room="{{ zone.player_name }}">-0:00</span>
                    </div>
                    <div class="room-controls volume-controls">
                       <a class="btn btn-info btn-xs circle-btn volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-minus"></span></a>
@@ -486,19 +490,47 @@ function fetchAlbumArt(room,title,artist){
     });
 }
 
-// Helper to update progress bar
+// Function to format seconds as m:ss
+function fmt(sec){
+    if(sec < 0) sec = 0;
+    var m = Math.floor(sec/60);
+    var s = sec % 60;
+    return m+":"+("0"+s).slice(-2);
+}
+
 function updateProgressBar(room,durationSec,posSec){
     var $container = $('.track-progress[data-room="'+room+'"]');
     var $bar = $container.find('.progress-bar');
     if(!$bar.length) return;
+
     if(!durationSec || durationSec === 0){
         $bar.css('width','0%');
         return;
     }
+
     var pct = Math.min((posSec/durationSec)*100, 100);
-    $bar.css('width', pct + '%');
-    // store duration for later use (seek)
+
+    // First time: disable transition for instant positioning
+    if(!$container.data('initialized')){
+        $container.addClass('notrans');
+        $bar.css('width', pct + '%');
+        // re-enable transition after next paint
+        requestAnimationFrame(function(){
+            $container.removeClass('notrans');
+        });
+        $container.data('initialized', true);
+    }else{
+        $bar.css('width', pct + '%');
+    }
+
+    // store duration for seeking
     $container.data('duration', durationSec);
+
+    // Update timers
+    var $cur = $('.time-current[data-room="'+room+'"]');
+    var $rem = $('.time-remaining[data-room="'+room+'"]');
+    $cur.text(fmt(posSec));
+    $rem.text('-'+fmt(durationSec-posSec));
 }
 </script>
 
@@ -659,6 +691,27 @@ function updateProgressBar(room,durationSec,posSec){
 /* Smoothly animate progress bar width between updates */
 .track-progress .progress-bar{
     transition: width 5s linear;
+    position: relative;
+}
+
+/* Circular knob at end of progress */
+.track-progress .progress-bar::after{
+    content:"";
+    position:absolute;
+    right:0;
+    top:-4px;
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    background:#ff7b54;
+    transform:translateX(50%);
+}
+</style>
+
+<style>
+/* hide transition for initial set */
+.track-progress.notrans .progress-bar{
+    transition:none !important;
 }
 </style>
 
