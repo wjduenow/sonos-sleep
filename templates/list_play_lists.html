@@ -1,7 +1,10 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/bootstrap.min.css') }}">
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LZN37fEOBltyKiSkaUsXSPkv1wzSxUWWP+nMoM+JgdYB1e5Vq2ZbkHtxdAH7Cdh2" crossorigin="anonymous">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
@@ -137,14 +140,14 @@ body{background:#fff8f2;}
                        <span class="time-remaining" data-room="{{ zone.player_name }}">-0:00</span>
                    </div>
                    <div class="room-controls volume-controls">
-                      <a class="btn btn-info btn-xs circle-btn volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-minus"></span></a>
+                      <a class="btn btn-info btn-xs circle-btn volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#"><i class="bi bi-dash"></i></a>
                       <span class="room-volume circle-btn" data-room="{{ zone.player_name }}">--</span>
-                      <a class="btn btn-info btn-xs circle-btn volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-plus"></span></a>
+                      <a class="btn btn-info btn-xs circle-btn volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#"><i class="bi bi-plus"></i></a>
                    </div>
                    <div class="room-controls playback-controls" style="margin-top:6px;">
-                      <a class="btn btn-warning btn-xs circle-btn track-btn" data-dir="prev" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-step-backward"></span></a>
-                      <a  class="btn btn-success btn-xs circle-btn room-action" data-action="play" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-play"></span></a>
-                      <a class="btn btn-warning btn-xs circle-btn track-btn" data-dir="next" data-room="{{ zone.player_name }}" href="#"><span class="glyphicon glyphicon-step-forward"></span></a>
+                      <a class="btn btn-warning btn-xs circle-btn track-btn" data-dir="prev" data-room="{{ zone.player_name }}" href="#"><i class="bi bi-skip-backward-fill"></i></a>
+                      <a  class="btn btn-success btn-xs circle-btn room-action" data-action="play" data-room="{{ zone.player_name }}" href="#"><i class="bi bi-play-fill"></i></a>
+                      <a class="btn btn-warning btn-xs circle-btn track-btn" data-dir="next" data-room="{{ zone.player_name }}" href="#"><i class="bi bi-skip-forward-fill"></i></a>
                    </div>
                 </div>
             </div>
@@ -166,8 +169,8 @@ body{background:#fff8f2;}
       <div class="panel-heading playlist-heading d-flex justify-content-between align-items-center">
           <strong>{{ pl }}</strong>
           <div class="playlist-btn-group">
-            <button type="button" class="btn btn-primary btn-xs playlist-play-btn" data-playlist="{{ pl }}"><span class="glyphicon glyphicon-play"></span></button>
-            <button type="button" class="btn btn-info btn-xs playlist-toggle" data-toggle="collapse" data-target="#toggleDemo_{{ loop.index }}" data-playlist="{{ pl }}"><span class="glyphicon glyphicon-list"></span></button>
+            <button type="button" class="btn btn-primary btn-xs playlist-play-btn" data-playlist="{{ pl }}"><i class="bi bi-play-fill"></i></button>
+            <button type="button" class="btn btn-info btn-xs playlist-toggle" data-bs-toggle="collapse" data-bs-target="#toggleDemo_{{ loop.index }}" data-playlist="{{ pl }}"><i class="bi bi-list"></i></button>
           </div>
       </div>
       <div class="panel-body" style="padding:8px 15px;">
@@ -219,36 +222,36 @@ body{background:#fff8f2;}
 
 </div>
 
-<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="{{ url_for('static',filename='js/bootstrap.min.js') }}"></script>
+<!-- jQuery (for existing custom scripts; Bootstrap 5 itself doesn't require it) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-3gDiJ9N6agN2ymlk/wEYBLETymFcpnSUsctBkY+3tBQ=" crossorigin="anonymous"></script>
+<!-- Bootstrap 5 bundle (includes Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-qm464z2X5/C/PObbIVdQydb9h9NP7VDaRao7IhiHBpjz2uVH54camzatoorktr1c" crossorigin="anonymous"></script>
 
-    <script>
-    $(function(){
-        $('.playlist-toggle').on('click', function(){
-            var target = $(this).data('target');
-            var $targetDiv = $(target);
-            var isLoaded = $targetDiv.data('loaded');
-            if(!isLoaded){
-                var plName = $(this).data('playlist');
-                $.getJSON('/playlist_tracks', {play_list: plName, secret_key: '{{ secret_key }}'}, function(data){
-                    if(Array.isArray(data)){
-                        var $ol = $('<ol>');
-                        $.each(data, function(i, track){
-                            var text = track.title + ' - ' + track.creator + ' - ' + track.album;
-                            $ol.append($('<li>').text(text));
-                        });
-                        $targetDiv.append($ol);
-                        $targetDiv.data('loaded', true);
-                    } else if(data.error){
-                        $targetDiv.append($('<p class="text-danger">').text(data.error));
-                    }
-                });
-            }
-        });
+<script>
+$(function(){
+    $('.playlist-toggle').on('click', function(){
+        var target = $(this).data('target');
+        var $targetDiv = $(target);
+        var isLoaded = $targetDiv.data('loaded');
+        if(!isLoaded){
+            var plName = $(this).data('playlist');
+            $.getJSON('/playlist_tracks', {play_list: plName, secret_key: '{{ secret_key }}'}, function(data){
+                if(Array.isArray(data)){
+                    var $ol = $('<ol>');
+                    $.each(data, function(i, track){
+                        var text = track.title + ' - ' + track.creator + ' - ' + track.album;
+                        $ol.append($('<li>').text(text));
+                    });
+                    $targetDiv.append($ol);
+                    $targetDiv.data('loaded', true);
+                } else if(data.error){
+                    $targetDiv.append($('<p class="text-danger">').text(data.error));
+                }
+            });
+        }
     });
-    </script>
+});
+</script>
 
 <script>
 function showStatus(msg){
@@ -294,10 +297,10 @@ $(function(){
                   var action = res.is_playing ? 'pause' : 'play';
                   if(action === 'pause'){
                       $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning');
-                      $btn.find('span').removeClass('glyphicon-play').addClass('glyphicon-pause');
+                      $btn.find('i').removeClass('bi-play-fill').addClass('bi-pause-fill');
                   }else{
                       $btn.data('action','play').removeClass('btn-warning').addClass('btn-success');
-                      $btn.find('span').removeClass('glyphicon-pause').addClass('glyphicon-play');
+                      $btn.find('i').removeClass('bi-pause-fill').addClass('bi-play-fill');
                   }
               }
           });
@@ -326,11 +329,11 @@ $(function(){
               var msg;
               if(res.is_playing){
                   $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning');
-                  $btn.find('span').removeClass('glyphicon-play').addClass('glyphicon-pause');
+                  $btn.find('i').removeClass('bi-play-fill').addClass('bi-pause-fill');
                   msg = 'Playback Started';
               }else{
                   $btn.data('action','play').removeClass('btn-warning').addClass('btn-success');
-                  $btn.find('span').removeClass('glyphicon-pause').addClass('glyphicon-play');
+                  $btn.find('i').removeClass('bi-pause-fill').addClass('bi-play-fill');
                   msg = 'Playback Paused';
               }
               showStatus(msg);
@@ -379,10 +382,10 @@ $(function(){
                   var action = res.is_playing ? 'pause' : 'play';
                   if(action === 'pause'){
                       $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning');
-                      $btn.find('span').removeClass('glyphicon-play').addClass('glyphicon-pause');
+                      $btn.find('i').removeClass('bi-play-fill').addClass('bi-pause-fill');
                   }else{
                       $btn.data('action','play').removeClass('btn-warning').addClass('btn-success');
-                      $btn.find('span').removeClass('glyphicon-pause').addClass('glyphicon-play');
+                      $btn.find('i').removeClass('bi-pause-fill').addClass('bi-play-fill');
                   }
               }
           });
@@ -432,7 +435,12 @@ $(function(){
               // refresh track info quickly
               $('.track-info[data-room="'+room+'"]').text('Loading...');
               setTimeout(function(){
-                  $('#room_'+$('.room-action[data-room="'+room+'"]').closest('.panel-collapse').attr('id').split('_')[1]).data('loaded', false).collapse('show');
+                  var targetPanel = $('.room-action[data-room="'+room+'"]').closest('.panel-collapse');
+                  if(targetPanel.length){
+                      targetPanel.data('loaded', false);
+                      var collapseInstance = bootstrap.Collapse.getOrCreateInstance(targetPanel[0]);
+                      collapseInstance.show();
+                  }
               }, 500);
           }
       });
@@ -593,7 +601,7 @@ function updateProgressBar(room,durationSec,posSec, skipInit, skipOverrideGuard)
     border-radius: 10px;
 }
 
-.rooms-grid .btn-xs.glyphicon{
+.rooms-grid .btn-xs i{
     font-size:24px;
 }
 </style>
