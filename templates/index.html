@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sonos Controller</title>
     
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1976d2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Sonos Controller">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- App Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    
     <!-- Material Components for Web CSS -->
     <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
     <!-- Material Icons -->
@@ -453,6 +468,71 @@
                 width: 100%;
             }
         }
+
+        /* Native App Enhancements */
+        
+        /* Disable text selection for app-like feel */
+        .room-button, .mdc-icon-button, .playlist-actions button, .queue-item {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Enhanced touch targets for mobile */
+        @media (max-width: 768px) {
+            .mdc-icon-button {
+                width: 48px;
+                height: 48px;
+                padding: 12px;
+            }
+            
+            .room-button {
+                min-height: 64px;
+                touch-action: manipulation;
+            }
+            
+            .queue-item {
+                min-height: 56px;
+                touch-action: manipulation;
+            }
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* iOS Safari specific fixes */
+        body {
+            -webkit-overflow-scrolling: touch;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Pull-to-refresh prevention */
+        body {
+            overscroll-behavior: contain;
+        }
+        
+        /* App-like status bar spacing for iOS */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .app-container {
+                padding-top: max(16px, env(safe-area-inset-top));
+                padding-bottom: max(16px, env(safe-area-inset-bottom));
+            }
+        }
+        
+        /* Loading states */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        /* Improved focus states for accessibility */
+        .room-button:focus, .mdc-icon-button:focus, .queue-item:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body>
@@ -606,6 +686,8 @@
                 this.selectedPlaylist = null;
                 this.pollInterval = null;
                 this.dragState = null;
+                this.isOnline = navigator.onLine;
+                this.installPrompt = null;
                 
                 this.init();
             }
@@ -613,6 +695,7 @@
             init() {
                 this.initializeEventListeners();
                 this.initializeMDCComponents();
+                this.initializeNativeFeatures();
             }
 
             initializeMDCComponents() {
@@ -622,10 +705,105 @@
                 });
             }
 
+            initializeNativeFeatures() {
+                // Haptic feedback utility
+                this.hapticFeedback = (type = 'light') => {
+                    if ('vibrate' in navigator) {
+                        const patterns = {
+                            light: [10],
+                            medium: [20],
+                            heavy: [30],
+                            success: [10, 50, 10],
+                            error: [50, 100, 50]
+                        };
+                        navigator.vibrate(patterns[type] || patterns.light);
+                    }
+                };
+
+                // PWA install prompt
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    this.installPrompt = e;
+                    this.showInstallButton();
+                });
+
+                // Online/offline detection
+                window.addEventListener('online', () => {
+                    this.isOnline = true;
+                    this.showStatus('Connection restored', 2000);
+                });
+
+                window.addEventListener('offline', () => {
+                    this.isOnline = false;
+                    this.showStatus('No internet connection', 5000);
+                });
+
+                // Prevent zoom on double tap (iOS)
+                let lastTouchEnd = 0;
+                document.addEventListener('touchend', (e) => {
+                    const now = (new Date()).getTime();
+                    if (now - lastTouchEnd <= 300) {
+                        e.preventDefault();
+                    }
+                    lastTouchEnd = now;
+                }, false);
+
+                // Add loading states
+                this.addLoadingStates();
+            }
+
+            showInstallButton() {
+                // Create install button if not exists
+                if (!document.getElementById('installButton')) {
+                    const installBtn = document.createElement('button');
+                    installBtn.id = 'installButton';
+                    installBtn.className = 'mdc-button mdc-button--raised';
+                    installBtn.innerHTML = '<span class="mdc-button__label">Install App</span>';
+                    installBtn.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 1000;';
+                    
+                    installBtn.addEventListener('click', async () => {
+                        if (this.installPrompt) {
+                            this.hapticFeedback('medium');
+                            this.installPrompt.prompt();
+                            const result = await this.installPrompt.userChoice;
+                            if (result.outcome === 'accepted') {
+                                this.showStatus('App installed successfully!');
+                            }
+                            this.installPrompt = null;
+                            installBtn.remove();
+                        }
+                    });
+                    
+                    document.body.appendChild(installBtn);
+                    mdc.ripple.MDCRipple.attachTo(installBtn);
+                }
+            }
+
+            addLoadingStates() {
+                // Override fetch to add loading states
+                const originalFetch = window.fetch;
+                window.fetch = async (...args) => {
+                    const button = document.activeElement;
+                    if (button && (button.classList.contains('mdc-button') || button.classList.contains('mdc-icon-button'))) {
+                        button.classList.add('loading');
+                    }
+                    
+                    try {
+                        const response = await originalFetch(...args);
+                        return response;
+                    } finally {
+                        if (button) {
+                            button.classList.remove('loading');
+                        }
+                    }
+                };
+            }
+
             initializeEventListeners() {
                 // Room button clicks
                 document.querySelectorAll('.room-button').forEach(button => {
                     button.addEventListener('click', (e) => {
+                        this.hapticFeedback('light');
                         const room = e.target.dataset.room;
                         this.openRoomModal(room);
                     });
@@ -634,6 +812,7 @@
                 // Playlist actions
                 document.querySelectorAll('[data-action="play"]').forEach(button => {
                     button.addEventListener('click', (e) => {
+                        this.hapticFeedback('medium');
                         const playlist = e.target.closest('[data-playlist]').dataset.playlist;
                         this.selectedPlaylist = playlist;
                         this.openRoomSelectModal();
@@ -732,6 +911,7 @@
                     const queueItem = e.target.closest('.queue-item');
                     if (!queueItem) return;
                     
+                    this.hapticFeedback('light');
                     const trackIndex = parseInt(queueItem.dataset.index);
                     if (!isNaN(trackIndex) && this.currentRoom) {
                         this.jumpToTrack(trackIndex);
