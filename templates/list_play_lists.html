@@ -199,15 +199,50 @@ body{background:#fff8f2;}
   {% endfor %}
   </div> <!-- playlist-grid -->
 
+<!-- Custom overrides for better app-like styling -->
+<style>
+/* Smaller square padding removal for room buttons */
+.room-card .mdc-card__media--square {
+    padding-top: 0; /* remove enforced 1:1 ratio */
+    height: auto;
+}
+
+/* Room link button sizing */
+.room-link {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 16px;
+    line-height: 1.2;
+    --mdc-theme-primary: #1976d2; /* use primary color */
+}
+
+/* Close button top-left positioning */
+.mdc-dialog__header {
+    display: flex;
+    align-items: center;
+}
+.mdc-dialog__header .mdc-dialog__close {
+    order: -1; /* appear before title */
+    margin-right: 12px;
+}
+
+/* Playlist room-choice buttons */
+.room-choice.mdc-button {
+    width: 100%;
+    margin: 6px 0;
+    justify-content: flex-start;
+}
+</style>
+
 <!-- Room detail dialog -->
 <div class="mdc-dialog" id="roomDetailModal">
   <div class="mdc-dialog__container">
     <div class="mdc-dialog__surface" role="alertdialog" aria-modal="true">
       <div class="mdc-dialog__header">
-        <h2 class="mdc-dialog__title" id="roomModalTitle">Room</h2>
         <button class="mdc-icon-button mdc-dialog__close" data-mdc-dialog-action="close">
           <i class="material-icons">close</i>
         </button>
+        <h2 class="mdc-dialog__title" id="roomModalTitle">Room</h2>
       </div>
       <div class="mdc-dialog__content" id="roomModalBody">
         <!-- dynamic room controls will be placed here -->
@@ -222,16 +257,16 @@ body{background:#fff8f2;}
   <div class="mdc-dialog__container">
     <div class="mdc-dialog__surface" role="alertdialog" aria-modal="true">
       <div class="mdc-dialog__header">
-        <h2 class="mdc-dialog__title">Select Room</h2>
         <button class="mdc-icon-button mdc-dialog__close" data-mdc-dialog-action="close">
           <i class="material-icons">close</i>
         </button>
+        <h2 class="mdc-dialog__title">Select Room</h2>
       </div>
       <div class="mdc-dialog__content">
         <div id="roomList" class="mdc-list">
           {% for zone in zones %}
-             <button class="mdc-list-item room-choice" data-room="{{ zone.player_name }}">
-               <span class="mdc-list-item__text">{{ zone.player_name }}</span>
+             <button class="mdc-button mdc-button--raised room-choice" data-room="{{ zone.player_name }}">
+               <span class="mdc-button__label">{{ zone.player_name }}</span>
              </button>
           {% endfor %}
         </div>
@@ -256,27 +291,14 @@ body{background:#fff8f2;}
 let roomDetailDialog, roomSelectDialog;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize dialogs with error handling
-    try {
-        const roomDetailEl = document.getElementById('roomDetailModal');
-        const roomSelectEl = document.getElementById('roomSelectModal');
-        
-        if (roomDetailEl && mdc && mdc.dialog) {
-            roomDetailDialog = new mdc.dialog.MDCDialog(roomDetailEl);
-            console.log('Room detail dialog initialized');
-        } else {
-            console.error('Failed to initialize room detail dialog', {roomDetailEl, mdc});
-        }
-        
-        if (roomSelectEl && mdc && mdc.dialog) {
-            roomSelectDialog = new mdc.dialog.MDCDialog(roomSelectEl);
-            console.log('Room select dialog initialized');
-        } else {
-            console.error('Failed to initialize room select dialog', {roomSelectEl, mdc});
-        }
-    } catch (error) {
-        console.error('Error initializing dialogs:', error);
-    }
+    // Initialize dialogs
+    roomDetailDialog = new mdc.dialog.MDCDialog(document.getElementById('roomDetailModal'));
+    roomSelectDialog = new mdc.dialog.MDCDialog(document.getElementById('roomSelectModal'));
+    
+    // Attach ripple effect to all MDC buttons for better UX
+    document.querySelectorAll('.mdc-button').forEach(el => {
+        mdc.ripple.MDCRipple.attachTo(el);
+    });
     
     // Playlist toggle handler
     document.addEventListener('click', (e) => {
@@ -442,7 +464,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', (e) => {
       const btn = e.target.closest('.playlist-play-btn');
       if (!btn) return;
-      console.log('Playlist play button clicked', btn.dataset.playlist);
       selectedPlaylist = btn.dataset.playlist;
       if (roomSelectDialog) {
           console.log('Opening room select dialog');
