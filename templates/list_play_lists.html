@@ -672,4 +672,11 @@ function updateProgressBar(room,durationSec,posSec, skipInit, skipOverrideGuard)
         container.dataset.lastPos = posSec;
     });
 
-    document.querySelectorAll(`[data-room="${room}"].time-current`
+    document.querySelectorAll(`[data-room="${room}"].time-current`).forEach(el => {
+        el.textContent = fmt(posSec);
+    });
+}
+</script>
+
+</body>
+</html>
