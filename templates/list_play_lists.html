@@ -767,10 +767,11 @@ function updateProgressBar(room,durationSec,posSec, skipInit, skipOverrideGuard)
     position:absolute;
     right:0;
     top:50%;
-    width:18px;
-    height:18px;
+    width:24px;
+    height:24px;
     border-radius:50%;
     background:#ff7b54;
+    border:2px solid #fff;
     transform:translate(50%,-50%); /* center vertically on bar then move */
     box-shadow:0 0 2px rgba(0,0,0,.4);
     z-index:10; /* ensure above bar */
@@ -795,6 +796,13 @@ function updateProgressBar(room,durationSec,posSec, skipInit, skipOverrideGuard)
     display:flex;
     justify-content:space-between;
     width:100%;
+}
+</style>
+
+<style>
+/* Force room buttons to have dark text */
+.room-link{
+    color:#000 !important;
 }
 </style>
 
