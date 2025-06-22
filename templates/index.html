@@ -818,6 +818,8 @@
                     const response = await fetch(`/queue?room=${encodeURIComponent(this.currentRoom)}&secret_key=${this.secretKey}&ajax=1`);
                     const data = await response.json();
 
+                    console.log('Queue data received:', data); // Debug log
+
                     if (data.status === 'ok' && data.queue && Array.isArray(data.queue)) {
                         this.renderQueue(data.queue, data.current_index || 0);
                     } else {
@@ -832,6 +834,8 @@
             renderQueue(queue, currentIndex) {
                 const queueContent = document.getElementById('queueContent');
                 
+                console.log('Rendering queue:', queue, 'current index:', currentIndex); // Debug log
+                
                 if (queue.length === 0) {
                     queueContent.innerHTML = '<div class="error-message">No tracks in queue</div>';
                     return;
@@ -841,6 +845,8 @@
                 queueList.className = 'queue-list';
 
                 queue.forEach((track, index) => {
+                    console.log('Track', index, ':', track); // Debug log
+                    
                     const listItem = document.createElement('li');
                     listItem.className = 'queue-item';
                     listItem.dataset.index = index;
@@ -855,7 +861,7 @@
                             <div class="queue-item-title">${this.escapeHtml(track.title || 'Unknown Title')}</div>
                             <div class="queue-item-artist">${this.escapeHtml(track.artist || 'Unknown Artist')}</div>
                         </div>
-                        <div class="queue-item-duration">${this.formatTime(track.duration || 0)}</div>
+                        <div class="queue-item-duration">${track.duration ? this.formatTime(track.duration) : '--'}</div>
                     `;
 
                     queueList.appendChild(listItem);
@@ -1171,9 +1177,20 @@
 
                     if (data.status === 'ok') {
                         this.showStatus('Jumped to selected track');
+                        
+                        // Refresh the queue to update current track highlighting
+                        await this.loadQueue();
+                        
+                        // Also refresh the room status to update the player UI
+                        setTimeout(() => {
+                            this.updateRoomStatus();
+                        }, 1000);
+                    } else {
+                        this.showStatus('Failed to jump to track: ' + (data.error || 'Unknown error'));
                     }
                 } catch (error) {
                     console.error('Failed to jump to track:', error);
+                    this.showStatus('Failed to jump to track');
                 }
             }
         }
