@@ -10,7 +10,7 @@
 
 <body>
 
-<div id="statusOverlay">Status</div>
+<div id="statusOverlay"><span id="statusMessage"></span><i class="material-icons close-overlay" title="Close">close</i></div>
 
 <style>
 #statusOverlay{
@@ -21,10 +21,20 @@
   transform: translateX(-50%);
   background: rgba(0,0,0,0.85);
   color: #fff;
-  padding: 10px 25px;
+  padding: 10px 20px;
   border-radius: 4px;
-  font-weight: bold;
+  font-weight: 500;
   z-index: 1050;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  cursor:pointer; /* allow click anywhere to dismiss */
+  transition: opacity .35s ease;
+}
+
+#statusOverlay .close-overlay{
+  font-size:20px;
+  opacity:0.9;
 }
 </style>
 
@@ -339,14 +349,41 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <script>
-function showStatus(msg){
+function showStatus(msg,duration=4000){
   const ov = document.getElementById('statusOverlay');
-  ov.textContent = msg;
-  ov.style.display = 'block';
-  ov.style.opacity = '1';
-  setTimeout(() => ov.style.opacity = '0', 200);
-  setTimeout(() => ov.style.display = 'none', 7200);
+  const msgSpan = document.getElementById('statusMessage');
+  if(msgSpan){
+      msgSpan.textContent = msg;
+  }else{
+      ov.textContent = msg; // fallback
+  }
+
+  // Reset any existing timers
+  clearTimeout(ov._fadeTimer);
+  clearTimeout(ov._hideTimer);
+
+  ov.style.display = 'flex';
+  requestAnimationFrame(()=>{
+      ov.style.opacity = '1';
+  });
+
+  ov._fadeTimer = setTimeout(()=>{
+      ov.style.opacity = '0';
+  }, duration);
+
+  ov._hideTimer = setTimeout(()=>{
+      ov.style.display = 'none';
+  }, duration + 400); // wait for fade transition
 }
+
+// Allow user to dismiss manually by clicking anywhere or the close icon
+document.addEventListener('DOMContentLoaded', ()=>{
+  const ov = document.getElementById('statusOverlay');
+  ov.addEventListener('click', ()=>{
+      ov.style.opacity = '0';
+      setTimeout(()=>{ ov.style.display='none'; }, 350);
+  });
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   const secretKey = '{{ secret_key }}';
@@ -466,11 +503,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!btn) return;
       selectedPlaylist = btn.dataset.playlist;
       if (roomSelectDialog) {
-          console.log('Opening room select dialog');
           roomSelectDialog.open();
       } else {
-          console.error('Room select dialog not initialized');
-          alert('Dialog not available. Please refresh the page.');
+          // Fallback: reload page if dialog failed (rare)
+          window.location.reload();
       }
   });
 
@@ -902,7 +938,7 @@ document.addEventListener('touchend', (e) => {
 .section-title { color: #1976d2; margin: 24px 0 16px; font-weight: 500; }
 
 /* Status overlay */
-#statusOverlay { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 24px; border-radius: 4px; z-index: 1000; display: none; }
+#statusOverlay { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #fff; padding: 10px 20px; border-radius: 4px; display: none; z-index: 1050; display:flex; align-items:center; gap:12px; cursor:pointer; transition: opacity .35s ease; }
 </style>
 
 </body>
