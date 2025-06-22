@@ -256,15 +256,28 @@ body{background:#fff8f2;}
 let roomDetailDialog, roomSelectDialog;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize dialogs
-    roomDetailDialog = new mdc.dialog.MDCDialog(document.getElementById('roomDetailModal'));
-    roomSelectDialog = new mdc.dialog.MDCDialog(document.getElementById('roomSelectModal'));
+    // Initialize dialogs with error handling
+    try {
+        const roomDetailEl = document.getElementById('roomDetailModal');
+        const roomSelectEl = document.getElementById('roomSelectModal');
+        
+        if (roomDetailEl && mdc && mdc.dialog) {
+            roomDetailDialog = new mdc.dialog.MDCDialog(roomDetailEl);
+            console.log('Room detail dialog initialized');
+        } else {
+            console.error('Failed to initialize room detail dialog', {roomDetailEl, mdc});
+        }
+        
+        if (roomSelectEl && mdc && mdc.dialog) {
+            roomSelectDialog = new mdc.dialog.MDCDialog(roomSelectEl);
+            console.log('Room select dialog initialized');
+        } else {
+            console.error('Failed to initialize room select dialog', {roomSelectEl, mdc});
+        }
+    } catch (error) {
+        console.error('Error initializing dialogs:', error);
+    }
     
-    // Initialize icon buttons
-    document.querySelectorAll('.mdc-icon-button').forEach(el => {
-        new mdc.iconButton.MDCIconButtonToggle(el);
-    });
-
     // Playlist toggle handler
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.playlist-toggle');
@@ -423,74 +436,21 @@ document.addEventListener('DOMContentLoaded', () => {
           });
   });
 
-  // Lazy-load status when room card is expanded
-  $('#roomsAccordion').on('shown.bs.collapse', function(e){
-      var $panel = $(e.target);
-      if($panel.data('loaded')) return;
-
-      var room = $panel.closest('.panel').find('.room-action').data('room');
-      // initial fetch then start polling
-      const updateRoomStatus = function(){
-          fetch(`/room_status?room=${encodeURIComponent(room)}&secret_key=${secretKey}&ajax=1`)
-              .then(r => r.json())
-              .then(res => {
-              if(res.status === 'ok'){
-                  // Update progress bar
-                  updateProgressBar(room, res.duration_sec, res.position_sec);
-
-                  document.querySelectorAll(`[data-room="${room}"].track-info`).forEach(el => el.textContent = res.track);
-                  document.querySelectorAll(`[data-room="${room}"].room-volume`).forEach(el => el.textContent = `Vol ${res.volume}`);
-
-                  // Refresh album art if track changed
-                  const imgs = document.querySelectorAll(`[data-room="${room}"].album-art`);
-                  imgs.forEach(img => {
-                      if(img.dataset.current !== res.title){
-                          img.dataset.loaded = 'false';
-                          img.dataset.current = res.title;
-                      }
-                  });
-                  if(imgs.length) {
-                      fetchAlbumArt(room, res.title, res.artist);
-                  }
-
-                  const btns = document.querySelectorAll(`[data-room="${room}"].room-action`);
-                  btns.forEach(btn => {
-                      const action = res.is_playing ? 'pause' : 'play';
-                      btn.dataset.action = action;
-                      const icon = btn.querySelector('i');
-                      if(action === 'pause'){
-                          icon.textContent = 'pause';
-                      }else{
-                          icon.textContent = 'play_arrow';
-                      }
-                  });
-              }
-          });
-      };
-
-      updateRoomStatus();
-
-      var pollId = setInterval(updateRoomStatus, 5000);
-      $panel.data('pollId', pollId);
-      $panel.data('loaded', true);
-  });
-
-  // Stop polling when card collapses
-  $('#roomsAccordion').on('hide.bs.collapse', function(e){
-      var $panel = $(e.target);
-      var pollId = $panel.data('pollId');
-      if(pollId){
-          clearInterval(pollId);
-          $panel.removeData('pollId');
-      }
-  });
+  // Note: Room cards no longer use accordion collapse - they open in modal instead
 
   let selectedPlaylist = null;
   document.addEventListener('click', (e) => {
       const btn = e.target.closest('.playlist-play-btn');
       if (!btn) return;
+      console.log('Playlist play button clicked', btn.dataset.playlist);
       selectedPlaylist = btn.dataset.playlist;
-      roomSelectDialog.open();
+      if (roomSelectDialog) {
+          console.log('Opening room select dialog');
+          roomSelectDialog.open();
+      } else {
+          console.error('Room select dialog not initialized');
+          alert('Dialog not available. Please refresh the page.');
+      }
   });
 
   document.addEventListener('click', (e) => {
