@@ -60,7 +60,7 @@ def list_play_lists():
   playlist_titles = [pl.title for pl in playlists]
 
   # Render without per-room status (will be fetched client-side)
-  return render_template('list_play_lists.html', zones = zones, playlists = playlist_titles, secret_key = app.secret_key)
+  return render_template('index.html', zones = zones, playlists = playlist_titles, secret_key = app.secret_key)
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
