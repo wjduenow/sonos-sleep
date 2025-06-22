@@ -386,6 +386,7 @@
             align-items: center;
             gap: 12px;
             transition: background-color 0.2s ease;
+            cursor: pointer;
         }
 
         .queue-item:hover {
@@ -725,6 +726,17 @@
                 document.getElementById('queueModal').addEventListener('click', (e) => {
                     if (e.target === e.currentTarget) this.closeQueueModal();
                 });
+
+                // Queue item clicks
+                document.addEventListener('click', (e) => {
+                    const queueItem = e.target.closest('.queue-item');
+                    if (!queueItem) return;
+                    
+                    const trackIndex = parseInt(queueItem.dataset.index);
+                    if (!isNaN(trackIndex) && this.currentRoom) {
+                        this.jumpToTrack(trackIndex);
+                    }
+                });
             }
 
             showStatus(message, duration = 4000) {
@@ -831,6 +843,7 @@
                 queue.forEach((track, index) => {
                     const listItem = document.createElement('li');
                     listItem.className = 'queue-item';
+                    listItem.dataset.index = index;
                     
                     if (index === currentIndex) {
                         listItem.classList.add('current-track');
@@ -1146,6 +1159,21 @@
                     window.location.href = `/sonos_playlist?play_list=${encodeURIComponent(playlist)}&room=${encodeURIComponent(room)}&secret_key=${this.secretKey}`;
                 } catch (error) {
                     console.error('Failed to play playlist:', error);
+                }
+            }
+
+            async jumpToTrack(trackIndex) {
+                if (!this.currentRoom) return;
+
+                try {
+                    const response = await fetch(`/jump_to_track?room=${encodeURIComponent(this.currentRoom)}&track_index=${trackIndex}&secret_key=${this.secretKey}&ajax=1`);
+                    const data = await response.json();
+
+                    if (data.status === 'ok') {
+                        this.showStatus('Jumped to selected track');
+                    }
+                } catch (error) {
+                    console.error('Failed to jump to track:', error);
                 }
             }
         }

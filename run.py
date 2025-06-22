@@ -556,6 +556,53 @@ def get_queue():
     except Exception as e:
         return jsonify({"error": f"Failed to get queue: {str(e)}"}), HTTPStatus.HTTP_500_INTERNAL_SERVER_ERROR
 
+# ---------------------------------------------------------
+#   Jump to track in queue
+# ---------------------------------------------------------
+
+@app.route('/jump_to_track', methods=['GET', 'POST'])
+def jump_to_track():
+    """Jump to a specific track in the queue by index."""
+    
+    if request.args.get("secret_key") != app.secret_key:
+        return jsonify({"error": "Forbidden"}), HTTPStatus.HTTP_403_FORBIDDEN
+
+    room = request.args.get('room')
+    track_index = request.args.get('track_index')
+    
+    if not room:
+        return jsonify({"error": "Missing room parameter"}), HTTPStatus.HTTP_400_BAD_REQUEST
+    
+    if track_index is None:
+        return jsonify({"error": "Missing track_index parameter"}), HTTPStatus.HTTP_400_BAD_REQUEST
+
+    try:
+        track_index = int(track_index)
+    except ValueError:
+        return jsonify({"error": "Invalid track_index parameter"}), HTTPStatus.HTTP_400_BAD_REQUEST
+
+    try:
+        sonos = _find_sonos(room)
+        if sonos is None:
+            return jsonify({"error": "Room not found"}), HTTPStatus.HTTP_404_NOT_FOUND
+
+        # Jump to the specified track in the queue (soco uses 0-based indexing)
+        sonos.play_from_queue(track_index)
+
+        if request.args.get('ajax') == '1':
+            return jsonify({'status': 'ok', 'track_index': track_index})
+
+        flash(f"Jumped to track {track_index + 1} in {room}", 'success')
+        return redirect(f"/?secret_key={request.args.get('secret_key')}")
+
+    except Exception as e:
+        error_msg = f"Failed to jump to track: {str(e)}"
+        if request.args.get('ajax') == '1':
+            return jsonify({"error": error_msg}), HTTPStatus.HTTP_500_INTERNAL_SERVER_ERROR
+        else:
+            flash(error_msg, 'error')
+            return redirect(f"/?secret_key={request.args.get('secret_key')}")
+
 # create mapping for http_status.* names used in code
 class _HttpCodes:
     HTTP_403_FORBIDDEN = HTTPStatus.FORBIDDEN
