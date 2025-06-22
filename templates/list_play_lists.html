@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Material Components for Web CSS -->
+  <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
@@ -116,17 +116,19 @@ body{background:#fff8f2;}
 <div class="container">
 
   <h3 class="section-title">Rooms</h3>
-  <div class="panel-group rooms-grid" id="roomsAccordion">
+  <div class="rooms-grid" id="roomsAccordion">
     {% for zone in zones %}
       <div class="room-col">
-      <div class="panel panel-default room-card">
-        <div class="panel-heading">
-          <h4 class="panel-title">
-            <button type="button" class="btn btn-outline-secondary text-dark w-100 text-start room-link" data-room="{{ zone.player_name }}">{{ zone.player_name }}</button>
-          </h4>
+      <div class="mdc-card room-card">
+        <div class="mdc-card__primary-action" tabindex="0">
+          <div class="mdc-card__media mdc-card__media--square">
+             <button type="button" class="mdc-button mdc-button--raised room-link" data-room="{{ zone.player_name }}">
+               <span class="mdc-button__label">{{ zone.player_name }}</span>
+             </button>
+          </div>
         </div>
-        <div id="room_{{ loop.index0 }}" class="panel-collapse collapse">
-          <div class="panel-body">
+        <div id="room_{{ loop.index0 }}" class="room-collapse" style="display:none;">
+          <div class="mdc-card__content">
             <div class="d-flex">
                 <img src="" alt="art" class="album-art" data-room="{{ zone.player_name }}" />
                 <div class="flex-grow-1 room-detail">
@@ -140,14 +142,24 @@ body{background:#fff8f2;}
                        <span class="time-remaining" data-room="{{ zone.player_name }}">-0:00</span>
                    </div>
                    <div class="room-controls volume-controls">
-                      <a class="btn btn-info btn-xs circle-btn volume-btn" data-change="down" data-room="{{ zone.player_name }}" href="#"><i class="bi bi-dash"></i></a>
+                      <button class="mdc-icon-button volume-btn" data-change="down" data-room="{{ zone.player_name }}">
+                        <i class="material-icons mdc-icon-button__icon">remove</i>
+                      </button>
                       <span class="room-volume circle-btn" data-room="{{ zone.player_name }}">--</span>
-                      <a class="btn btn-info btn-xs circle-btn volume-btn" data-change="up" data-room="{{ zone.player_name }}" href="#"><i class="bi bi-plus"></i></a>
+                      <button class="mdc-icon-button volume-btn" data-change="up" data-room="{{ zone.player_name }}">
+                        <i class="material-icons mdc-icon-button__icon">add</i>
+                      </button>
                    </div>
                    <div class="room-controls playback-controls" style="margin-top:6px;">
-                      <a class="btn btn-warning btn-xs circle-btn track-btn" data-dir="prev" data-room="{{ zone.player_name }}" href="#"><i class="bi bi-skip-backward-fill"></i></a>
-                      <a  class="btn btn-success btn-xs circle-btn room-action" data-action="play" data-room="{{ zone.player_name }}" href="#"><i class="bi bi-play-fill"></i></a>
-                      <a class="btn btn-warning btn-xs circle-btn track-btn" data-dir="next" data-room="{{ zone.player_name }}" href="#"><i class="bi bi-skip-forward-fill"></i></a>
+                      <button class="mdc-icon-button track-btn" data-dir="prev" data-room="{{ zone.player_name }}">
+                        <i class="material-icons mdc-icon-button__icon">skip_previous</i>
+                      </button>
+                      <button class="mdc-icon-button room-action" data-action="play" data-room="{{ zone.player_name }}">
+                        <i class="material-icons mdc-icon-button__icon">play_arrow</i>
+                      </button>
+                      <button class="mdc-icon-button track-btn" data-dir="next" data-room="{{ zone.player_name }}">
+                        <i class="material-icons mdc-icon-button__icon">skip_next</i>
+                      </button>
                    </div>
                 </div>
             </div>
@@ -165,17 +177,21 @@ body{background:#fff8f2;}
   <div class="playlist-grid">
   {% for pl in playlists %}
    <div class="playlist-col">
-    <div class="panel panel-default room-card playlist-card" style="margin-bottom:10px;">
-      <div class="panel-heading playlist-heading d-flex justify-content-between align-items-center">
+    <div class="mdc-card playlist-card" style="margin-bottom:10px;">
+      <div class="mdc-card__content playlist-heading">
           <strong>{{ pl }}</strong>
           <div class="playlist-btn-group">
-            <button type="button" class="btn btn-primary btn-xs playlist-play-btn" data-playlist="{{ pl }}"><i class="bi bi-play-fill"></i></button>
-            <button type="button" class="btn btn-info btn-xs playlist-toggle" data-bs-toggle="collapse" data-bs-target="#toggleDemo_{{ loop.index }}" data-target="#toggleDemo_{{ loop.index }}" data-playlist="{{ pl }}"><i class="bi bi-list"></i></button>
+            <button type="button" class="mdc-icon-button playlist-play-btn" data-playlist="{{ pl }}">
+              <i class="material-icons mdc-icon-button__icon">play_arrow</i>
+            </button>
+            <button type="button" class="mdc-icon-button playlist-toggle" data-target="#toggleDemo_{{ loop.index }}" data-playlist="{{ pl }}">
+              <i class="material-icons mdc-icon-button__icon">list</i>
+            </button>
           </div>
       </div>
-      <div class="panel-body" style="padding:8px 15px;">
-          <div class="collapse" id="toggleDemo_{{ loop.index }}" style="margin-top:8px;">
-              <!-- Track list will be populated here -->
+      <div class="mdc-card__content" style="padding:8px 15px;">
+          <div class="playlist-collapse" id="toggleDemo_{{ loop.index }}" style="margin-top:8px; display:none;">
+               <!-- Track list will be populated here -->
           </div>
       </div>
     </div>
@@ -183,133 +199,171 @@ body{background:#fff8f2;}
   {% endfor %}
   </div> <!-- playlist-grid -->
 
-<!-- Room detail modal -->
-<div class="modal fade" id="roomDetailModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-lg room-modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="roomModalTitle">Room</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Room detail dialog -->
+<div class="mdc-dialog" id="roomDetailModal">
+  <div class="mdc-dialog__container">
+    <div class="mdc-dialog__surface" role="alertdialog" aria-modal="true">
+      <div class="mdc-dialog__header">
+        <h2 class="mdc-dialog__title" id="roomModalTitle">Room</h2>
+        <button class="mdc-icon-button mdc-dialog__close" data-mdc-dialog-action="close">
+          <i class="material-icons">close</i>
+        </button>
       </div>
-      <div class="modal-body" id="roomModalBody">
+      <div class="mdc-dialog__content" id="roomModalBody">
         <!-- dynamic room controls will be placed here -->
       </div>
     </div>
   </div>
+  <div class="mdc-dialog__scrim"></div>
 </div>
 
-<!-- Room select modal -->
-<div class="modal fade" id="roomSelectModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Select Room</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Room select dialog -->
+<div class="mdc-dialog" id="roomSelectModal">
+  <div class="mdc-dialog__container">
+    <div class="mdc-dialog__surface" role="alertdialog" aria-modal="true">
+      <div class="mdc-dialog__header">
+        <h2 class="mdc-dialog__title">Select Room</h2>
+        <button class="mdc-icon-button mdc-dialog__close" data-mdc-dialog-action="close">
+          <i class="material-icons">close</i>
+        </button>
       </div>
-      <div class="modal-body">
-        <div id="roomList" class="list-group">
+      <div class="mdc-dialog__content">
+        <div id="roomList" class="mdc-list">
           {% for zone in zones %}
-             <a href="#" class="list-group-item room-choice" data-room="{{ zone.player_name }}">{{ zone.player_name }}</a>
+             <button class="mdc-list-item room-choice" data-room="{{ zone.player_name }}">
+               <span class="mdc-list-item__text">{{ zone.player_name }}</span>
+             </button>
           {% endfor %}
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      <div class="mdc-dialog__actions">
+        <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
+          <span class="mdc-button__label">Cancel</span>
+        </button>
       </div>
     </div>
   </div>
+  <div class="mdc-dialog__scrim"></div>
 </div>
 
 </div>
 
-<!-- jQuery (for existing custom scripts; Bootstrap 5 itself doesn't require it) -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<!-- Bootstrap 5 bundle (includes Popper) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Material Components for Web JS -->
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 
 <script>
-$(function(){
-    // Helper to open Bootstrap 5 modal with ID
-    window.showBsModal = function(id){
-        var el = document.getElementById(id);
-        if(!el) return;
-        var modal = bootstrap.Modal.getOrCreateInstance(el);
-        modal.show();
-    };
+// Initialize MDC components
+let roomDetailDialog, roomSelectDialog;
 
-    $('.playlist-toggle').on('click', function(){
-        var target = $(this).data('target');
-        var $targetDiv = $(target);
-        var isLoaded = $targetDiv.data('loaded');
-        if(!isLoaded){
-            var plName = $(this).data('playlist');
-            $.getJSON('/playlist_tracks', {play_list: plName, secret_key: '{{ secret_key }}'}, function(data){
-                if(Array.isArray(data)){
-                    var $ol = $('<ol>');
-                    $.each(data, function(i, track){
-                        var text = track.title + ' - ' + track.creator + ' - ' + track.album;
-                        $ol.append($('<li>').text(text));
-                    });
-                    $targetDiv.append($ol);
-                    $targetDiv.data('loaded', true);
-                } else if(data.error){
-                    $targetDiv.append($('<p class="text-danger">').text(data.error));
-                }
-            });
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize dialogs
+    roomDetailDialog = new mdc.dialog.MDCDialog(document.getElementById('roomDetailModal'));
+    roomSelectDialog = new mdc.dialog.MDCDialog(document.getElementById('roomSelectModal'));
+    
+    // Initialize icon buttons
+    document.querySelectorAll('.mdc-icon-button').forEach(el => {
+        new mdc.iconButton.MDCIconButtonToggle(el);
+    });
+
+    // Playlist toggle handler
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.playlist-toggle');
+        if (!btn) return;
+        
+        const target = btn.dataset.target;
+        const targetDiv = document.querySelector(target);
+        const isLoaded = targetDiv.dataset.loaded;
+        
+        if (!isLoaded) {
+            const plName = btn.dataset.playlist;
+            fetch(`/playlist_tracks?play_list=${encodeURIComponent(plName)}&secret_key={{ secret_key }}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        const ol = document.createElement('ol');
+                        data.forEach(track => {
+                            const li = document.createElement('li');
+                            li.textContent = `${track.title} - ${track.creator} - ${track.album}`;
+                            ol.appendChild(li);
+                        });
+                        targetDiv.appendChild(ol);
+                        targetDiv.dataset.loaded = 'true';
+                    } else if (data.error) {
+                        const p = document.createElement('p');
+                        p.className = 'mdc-theme--error';
+                        p.textContent = data.error;
+                        targetDiv.appendChild(p);
+                    }
+                });
         }
+        
+        // Toggle visibility
+        targetDiv.style.display = targetDiv.style.display === 'none' ? 'block' : 'none';
     });
 });
 </script>
 
 <script>
 function showStatus(msg){
-  var $ov = $('#statusOverlay');
-  $ov.text(msg).fadeIn(200).delay(7000).fadeOut(400);
+  const ov = document.getElementById('statusOverlay');
+  ov.textContent = msg;
+  ov.style.display = 'block';
+  ov.style.opacity = '1';
+  setTimeout(() => ov.style.opacity = '0', 200);
+  setTimeout(() => ov.style.display = 'none', 7200);
 }
 
-$(function(){
-  var secretKey = '{{ secret_key }}';
+document.addEventListener('DOMContentLoaded', () => {
+  const secretKey = '{{ secret_key }}';
 
   // --- ROOM MODAL BEHAVIOUR ---
-  var roomModalPollId = null;
-  $(document).on('click', '.room-link', function(e){
+  let roomModalPollId = null;
+  document.addEventListener('click', (e) => {
+      const roomBtn = e.target.closest('.room-link');
+      if (!roomBtn) return;
       e.preventDefault();
-      var room = $(this).data('room');
+      const room = roomBtn.dataset.room;
 
-      // Clone controls body into modal
-      var $panel = $(this).closest('.panel');
-      var $bodyHtml = $panel.find('.panel-body').html();
-      $('#roomModalTitle').text(room);
-      $('#roomModalBody').html($bodyHtml);
+      const panel = roomBtn.closest('.mdc-card');
+      const bodyHtml = panel.querySelector('.mdc-card__content').innerHTML;
+      document.getElementById('roomModalTitle').textContent = room;
+      document.getElementById('roomModalBody').innerHTML = bodyHtml;
 
-      showBsModal('roomDetailModal');
+      roomDetailDialog.open();
 
-      // start polling for this room
-      var updateRoomModal = function(){
-          $.getJSON('/room_status', {room: room, secret_key: secretKey, ajax: 1}, function(res){
+      const updateRoomModal = function(){
+          fetch(`/room_status?room=${encodeURIComponent(room)}&secret_key=${secretKey}&ajax=1`)
+              .then(r => r.json())
+              .then(res => {
               if(res.status === 'ok'){
                   // Update progress bar
                   updateProgressBar(room, res.duration_sec, res.position_sec);
 
-                  $('.track-info[data-room="'+room+'"]').text(res.track);
-                  $('.room-volume[data-room="'+room+'"]').text('Vol '+res.volume);
+                  document.querySelectorAll(`[data-room="${room}"].track-info`).forEach(el => el.textContent = res.track);
+                  document.querySelectorAll(`[data-room="${room}"].room-volume`).forEach(el => el.textContent = `Vol ${res.volume}`);
 
-                  var $img = $('.album-art[data-room="'+room+'"]');
-                  if($img.data('current') !== res.title){
-                      $img.data('loaded', false);
-                      $img.data('current', res.title);
+                  const imgs = document.querySelectorAll(`[data-room="${room}"].album-art`);
+                  imgs.forEach(img => {
+                      if(img.dataset.current !== res.title){
+                          img.dataset.loaded = 'false';
+                          img.dataset.current = res.title;
+                      }
+                  });
+                  if(imgs.length) {
+                      fetchAlbumArt(room, res.title, res.artist);
                   }
-                  fetchAlbumArt(room, res.title, res.artist);
 
-                  var $btn = $('.room-action[data-room="'+room+'"]');
-                  var action = res.is_playing ? 'pause' : 'play';
-                  if(action === 'pause'){
-                      $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning');
-                      $btn.find('i').removeClass('bi-play-fill').addClass('bi-pause-fill');
-                  }else{
-                      $btn.data('action','play').removeClass('btn-warning').addClass('btn-success');
-                      $btn.find('i').removeClass('bi-pause-fill').addClass('bi-play-fill');
-                  }
+                  const btns = document.querySelectorAll(`[data-room="${room}"].room-action`);
+                  btns.forEach(btn => {
+                      const action = res.is_playing ? 'pause' : 'play';
+                      btn.dataset.action = action;
+                      const icon = btn.querySelector('i');
+                      if(action === 'pause'){
+                          icon.textContent = 'pause';
+                      }else{
+                          icon.textContent = 'play_arrow';
+                      }
+                  });
               }
           });
       };
@@ -319,47 +373,54 @@ $(function(){
       roomModalPollId = setInterval(updateRoomModal, 5000);
   });
 
-  $('#roomDetailModal').on('hidden.bs.modal', function(){
+  roomDetailDialog.listen('MDCDialog:closed', () => {
       if(roomModalPollId){
           clearInterval(roomModalPollId);
           roomModalPollId = null;
       }
   });
 
-  $(document).on('click', '.room-action', function(e){
+  document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.room-action');
+      if (!btn) return;
       e.preventDefault();
-      var $btn = $(this);
-      var room = $btn.data('room');
-      var action = $btn.data('action');
-      var endpoint = action === 'pause' ? '/wake' : '/play';
-      $.getJSON(endpoint, {room: room, secret_key: secretKey, ajax: 1}, function(res){
-          if(res.status === 'ok'){
-              var msg;
-              if(res.is_playing){
-                  $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning');
-                  $btn.find('i').removeClass('bi-play-fill').addClass('bi-pause-fill');
-                  msg = 'Playback Started';
-              }else{
-                  $btn.data('action','play').removeClass('btn-warning').addClass('btn-success');
-                  $btn.find('i').removeClass('bi-pause-fill').addClass('bi-play-fill');
-                  msg = 'Playback Paused';
+      const room = btn.dataset.room;
+      const action = btn.dataset.action;
+      const endpoint = action === 'pause' ? '/wake' : '/play';
+      fetch(`${endpoint}?room=${encodeURIComponent(room)}&secret_key=${secretKey}&ajax=1`)
+          .then(r => r.json())
+          .then(res => {
+              if(res.status === 'ok'){
+                  let msg;
+                  const icon = btn.querySelector('i');
+                  if(res.is_playing){
+                      btn.dataset.action = 'pause';
+                      icon.textContent = 'pause';
+                      msg = 'Playback Started';
+                  }else{
+                      btn.dataset.action = 'play';
+                      icon.textContent = 'play_arrow';
+                      msg = 'Playback Paused';
+                  }
+                  showStatus(msg);
               }
-              showStatus(msg);
-          }
-      });
+          });
   });
 
-  $(document).on('click', '.volume-btn', function(e){
+  document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.volume-btn');
+      if (!btn) return;
       e.preventDefault();
-      var $btn = $(this);
-      var room = $btn.data('room');
-      var change = $btn.data('change');
-      $.getJSON('/volume', {room: room, change: change, secret_key: secretKey, ajax: 1}, function(res){
-          if(res.status === 'ok'){
-              $('.room-volume[data-room="'+room+'"]').text('Vol '+res.volume);
-              showStatus('Volume Updated to '+res.volume);
-          }
-      });
+      const room = btn.dataset.room;
+      const change = btn.dataset.change;
+      fetch(`/volume?room=${encodeURIComponent(room)}&change=${change}&secret_key=${secretKey}&ajax=1`)
+          .then(r => r.json())
+          .then(res => {
+              if(res.status === 'ok'){
+                  document.querySelectorAll(`[data-room="${room}"].room-volume`).forEach(el => el.textContent = `Vol ${res.volume}`);
+                  showStatus(`Volume Updated to ${res.volume}`);
+              }
+          });
   });
 
   // Lazy-load status when room card is expanded
@@ -370,31 +431,39 @@ $(function(){
       var room = $panel.closest('.panel').find('.room-action').data('room');
       // initial fetch then start polling
       const updateRoomStatus = function(){
-          $.getJSON('/room_status', {room: room, secret_key: secretKey, ajax: 1}, function(res){
+          fetch(`/room_status?room=${encodeURIComponent(room)}&secret_key=${secretKey}&ajax=1`)
+              .then(r => r.json())
+              .then(res => {
               if(res.status === 'ok'){
                   // Update progress bar
                   updateProgressBar(room, res.duration_sec, res.position_sec);
 
-                  $('.track-info[data-room="'+room+'"]').text(res.track);
-                  $('.room-volume[data-room="'+room+'"]').text('Vol '+res.volume);
+                  document.querySelectorAll(`[data-room="${room}"].track-info`).forEach(el => el.textContent = res.track);
+                  document.querySelectorAll(`[data-room="${room}"].room-volume`).forEach(el => el.textContent = `Vol ${res.volume}`);
 
                   // Refresh album art if track changed
-                  var $img = $('.album-art[data-room="'+room+'"]');
-                  if($img.data('current') !== res.title){
-                      $img.data('loaded', false); // allow re-fetch
-                      $img.data('current', res.title);
+                  const imgs = document.querySelectorAll(`[data-room="${room}"].album-art`);
+                  imgs.forEach(img => {
+                      if(img.dataset.current !== res.title){
+                          img.dataset.loaded = 'false';
+                          img.dataset.current = res.title;
+                      }
+                  });
+                  if(imgs.length) {
+                      fetchAlbumArt(room, res.title, res.artist);
                   }
-                  fetchAlbumArt(room, res.title, res.artist);
 
-                  var $btn = $('.room-action[data-room="'+room+'"]');
-                  var action = res.is_playing ? 'pause' : 'play';
-                  if(action === 'pause'){
-                      $btn.data('action','pause').removeClass('btn-success').addClass('btn-warning');
-                      $btn.find('i').removeClass('bi-play-fill').addClass('bi-pause-fill');
-                  }else{
-                      $btn.data('action','play').removeClass('btn-warning').addClass('btn-success');
-                      $btn.find('i').removeClass('bi-pause-fill').addClass('bi-play-fill');
-                  }
+                  const btns = document.querySelectorAll(`[data-room="${room}"].room-action`);
+                  btns.forEach(btn => {
+                      const action = res.is_playing ? 'pause' : 'play';
+                      btn.dataset.action = action;
+                      const icon = btn.querySelector('i');
+                      if(action === 'pause'){
+                          icon.textContent = 'pause';
+                      }else{
+                          icon.textContent = 'play_arrow';
+                      }
+                  });
               }
           });
       };
@@ -416,96 +485,96 @@ $(function(){
       }
   });
 
-  // Playlist play flow
-  var selectedPlaylist = null;
-  $(document).on('click', '.playlist-play-btn', function(){
-      selectedPlaylist = $(this).data('playlist');
-      showBsModal('roomSelectModal');
+  let selectedPlaylist = null;
+  document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.playlist-play-btn');
+      if (!btn) return;
+      selectedPlaylist = btn.dataset.playlist;
+      roomSelectDialog.open();
   });
 
-  $(document).on('click', '.room-choice', function(e){
+  document.addEventListener('click', (e) => {
+      const choice = e.target.closest('.room-choice');
+      if (!choice) return;
       e.preventDefault();
-      var room = $(this).data('room');
+      const room = choice.dataset.room;
       if(!selectedPlaylist) return;
-      // Redirect to server route to start playlist
-      window.location = '/sonos_playlist?play_list='+encodeURIComponent(selectedPlaylist)+'&room='+encodeURIComponent(room)+'&secret_key='+secretKey;
+      window.location = `/sonos_playlist?play_list=${encodeURIComponent(selectedPlaylist)}&room=${encodeURIComponent(room)}&secret_key=${secretKey}`;
   });
 
-  // next / previous track
-  $(document).on('click', '.track-btn', function(e){
+  document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.track-btn');
+      if (!btn) return;
       e.preventDefault();
-      var room = $(this).data('room');
-      var dir = $(this).data('dir');
-      var endpoint = dir === 'next' ? '/next' : '/previous';
-      $.getJSON(endpoint, {room: room, secret_key: secretKey, ajax: 1}, function(res){
-          if(res.status === 'ok'){
-              showStatus(dir === 'next' ? 'Skipped to Next' : 'Went to Previous');
-              // refresh track info quickly
-              $('.track-info[data-room="'+room+'"]').text('Loading...');
-              setTimeout(function(){
-                  var targetPanel = $('.room-action[data-room="'+room+'"]').closest('.panel-collapse');
-                  if(targetPanel.length){
-                      targetPanel.data('loaded', false);
-                      var collapseInstance = bootstrap.Collapse.getOrCreateInstance(targetPanel[0]);
-                      collapseInstance.show();
-                  }
-              }, 500);
-          }
-      });
+      const room = btn.dataset.room;
+      const dir = btn.dataset.dir;
+      const endpoint = dir === 'next' ? '/next' : '/previous';
+      fetch(`${endpoint}?room=${encodeURIComponent(room)}&secret_key=${secretKey}&ajax=1`)
+          .then(r => r.json())
+          .then(res => {
+              if(res.status === 'ok'){
+                  showStatus(dir === 'next' ? 'Skipped to Next' : 'Went to Previous');
+                  document.querySelectorAll(`[data-room="${room}"].track-info`).forEach(el => el.textContent = 'Loading...');
+                  setTimeout(() => {
+                      const targetPanel = document.querySelector(`[data-room="${room}"].room-action`).closest('.room-collapse');
+                      if(targetPanel){
+                          targetPanel.dataset.loaded = 'false';
+                          targetPanel.style.display = 'block';
+                      }
+                  }, 500);
+              }
+          });
   });
 
   // --- Drag seek logic ---
   window.dragState = null; // global state {room, duration, $container, posSec}
 
   function handleSeek(room,posSec,duration){
-      $.getJSON('/seek', {room: room, position_sec: posSec, secret_key: secretKey, ajax: 1}, function(res){
-          if(res.status === 'ok'){
-              showStatus('Seeked to '+fmt(posSec));
-          }
-      });
+      fetch(`/seek?room=${encodeURIComponent(room)}&position_sec=${posSec}&secret_key=${secretKey}&ajax=1`)
+          .then(r => r.json())
+          .then(res => {
+              if(res.status === 'ok'){
+                  showStatus('Seeked to '+fmt(posSec));
+              }
+          });
   }
 
-  $(document).on('mousedown touchstart', '.track-progress', function(e){
-      e.preventDefault();
-      var isTouch = e.type === 'touchstart';
-      var evt = isTouch ? e.originalEvent.touches[0] : e;
-      var $container = $(this);
-      var room = $container.data('room');
-      var duration = $container.data('duration');
+  document.addEventListener('mousedown', (e) => {
+      const container = e.target.closest('.track-progress');
+      if (!container) return;
+      const room = container.dataset.room;
+      const duration = container.dataset.duration;
       if(!duration) return;
 
-      window.dragState = {room: room, duration: duration, $container: $container};
-      // Disable transition during drag for snappy response
-      $container.addClass('notrans');
+      window.dragState = {room: room, duration: duration, container: container};
+      container.classList.add('notrans');
 
       // Immediately update position at touch point
-      updateDrag(evt);
+      updateDrag(e);
   });
 
   function updateDrag(evt){
       if(!window.dragState) return;
-      var $c = window.dragState.$container;
-      var offsetX = evt.pageX - $c.offset().left;
-      var pct = offsetX / $c.width();
+      const c = window.dragState.container;
+      const rect = c.getBoundingClientRect();
+      const offsetX = evt.pageX - rect.left;
+      let pct = offsetX / rect.width;
       pct = Math.max(0, Math.min(pct,1));
-      var posSec = Math.round(pct * window.dragState.duration);
-      // temporarily flag skipping update from polling
+      const posSec = Math.round(pct * window.dragState.duration);
       window.dragState.posSec = posSec;
-      updateProgressBar(window.dragState.room, window.dragState.duration, posSec, /*skipInitCheck=*/false, /*skipOverrideGuard=*/true);
+      updateProgressBar(window.dragState.room, window.dragState.duration, posSec, false, true);
   }
 
-  $(document).on('mousemove touchmove', function(e){
+  document.addEventListener('mousemove', (e) => {
       if(!window.dragState) return;
-      var isTouch = e.type === 'touchmove';
-      var evt = isTouch ? e.originalEvent.touches[0] : e;
+      const evt = e.type === 'touchmove' ? e.touches[0] : e;
       updateDrag(evt);
   });
 
-  $(document).on('mouseup touchend touchcancel', function(e){
+  document.addEventListener('mouseup', (e) => {
       if(!window.dragState) return;
       handleSeek(window.dragState.room, window.dragState.posSec, window.dragState.duration);
-      // Re-enable transition after drag completes
-      window.dragState.$container.removeClass('notrans');
+      window.dragState.container.classList.remove('notrans');
       window.dragState = null;
   });
 });
@@ -513,29 +582,22 @@ $(function(){
 // album art
 function fetchAlbumArt(room,title,artist){
     if(!title) return;
-    var $img = $('.album-art[data-room="'+room+'"]');
-    if($img.data('loaded')) return;
+    const imgs = document.querySelectorAll(`[data-room="${room}"].album-art`);
+    if(!imgs.length || imgs[0].dataset.loaded === 'true') return;
 
-    // Build search term combining title and artist for better accuracy
-    var q = (title + ' ' + artist).trim();
+    const q = (title + ' ' + artist).trim();
 
-    // Use the public iTunes Search API (no token required). We request JSONP to avoid any CORS issues.
-    $.ajax({
-        url: 'https://itunes.apple.com/search',
-        dataType: 'jsonp',
-        data: {
-            term: q,
-            entity: 'song',
-            limit: 1
-        },
-        success: function(r){
-            if(r.results && r.results.length){
-                // The API returns 100x100 artwork by default; request a higher-res version
-                var artUrl = r.results[0].artworkUrl100.replace(/100x100/, '250x250');
-                $img.attr('src', artUrl).data('loaded', true);
+    fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=1`)
+        .then(r => r.json())
+        .then(data => {
+            if(data.results && data.results.length){
+                const artUrl = data.results[0].artworkUrl100.replace(/100x100/, '250x250');
+                imgs.forEach(img => {
+                    img.src = artUrl;
+                    img.dataset.loaded = 'true';
+                });
             }
-        }
-    });
+        });
 }
 
 // Function to format seconds as m:ss
@@ -547,58 +609,79 @@ function fmt(sec){
 }
 
 function updateProgressBar(room,durationSec,posSec, skipInit, skipOverrideGuard){
-    var $container = $('.track-progress[data-room="'+room+'"]');
-    if(!$container.length) return;
+    const containers = document.querySelectorAll(`[data-room="${room}"].track-progress`);
+    if(!containers.length) return;
 
-    // If dragging this room, skip automatic updates unless explicitly told to override
-    if(!skipOverrideGuard && window.dragState && window.dragState.room === room) return;
+    containers.forEach(container => {
+        if(!skipOverrideGuard && window.dragState && window.dragState.room === room) return;
 
-    if(!durationSec || durationSec === 0){
-        var $bar0 = $container.find('.progress-bar');
-        if($bar0.length) $bar0.css('width','0%');
-        return;
-    }
-
-    var lastPos = $container.data('lastPos') || 0;
-    var isRewind = posSec < lastPos - 1; // if position went backwards significantly
-
-    if(!skipInit && !$container.data('initialized')){
-        $container.addClass('notrans');
-        var $bar = $container.find('.progress-bar');
-        if(!$bar.length) return;
-        var pct = Math.min((posSec/durationSec)*100, 100);
-        $bar.css('width', pct + '%');
-        // re-enable transition after next paint
-        requestAnimationFrame(function(){
-            $container.removeClass('notrans');
-        });
-        $container.data('initialized', true);
-    }else{
-        var pct = Math.min((posSec/durationSec)*100, 100);
-        var $bar = $container.find('.progress-bar');
-        if(!$bar.length) return;
-        if(isRewind){
-            // jump instantly without animation when track restarts/changes
-            $container.addClass('notrans');
+        if(!durationSec || durationSec === 0){
+            const bar = container.querySelector('.progress-bar');
+            if(bar) bar.style.width = '0%';
+            return;
         }
-        $bar.css('width', pct + '%');
-        if(isRewind){
-            requestAnimationFrame(function(){
-                $container.removeClass('notrans');
+
+        const lastPos = parseFloat(container.dataset.lastPos) || 0;
+        const isRewind = posSec < lastPos - 1;
+
+        if(!skipInit && !container.dataset.initialized){
+            container.classList.add('notrans');
+            const bar = container.querySelector('.progress-bar');
+            if(!bar) return;
+            const pct = Math.min((posSec/durationSec)*100, 100);
+            bar.style.width = pct + '%';
+            requestAnimationFrame(() => {
+                container.classList.remove('notrans');
             });
+            container.dataset.initialized = 'true';
+        }else{
+            const pct = Math.min((posSec/durationSec)*100, 100);
+            const bar = container.querySelector('.progress-bar');
+            if(!bar) return;
+            if(isRewind){
+                container.classList.add('notrans');
+            }
+            bar.style.width = pct + '%';
+            if(isRewind){
+                requestAnimationFrame(() => {
+                    container.classList.remove('notrans');
+                });
+            }
         }
-    }
 
-    // store duration for seeking
-    $container.data('duration', durationSec);
-    $container.data('lastPos', posSec);
+        container.dataset.duration = durationSec;
+        container.dataset.lastPos = posSec;
+    });
 
-    // Update timers
-    var $cur = $('.time-current[data-room="'+room+'"]');
-    var $rem = $('.time-remaining[data-room="'+room+'"]');
-    $cur.text(fmt(posSec));
-    $rem.text('-'+fmt(durationSec-posSec));
+    document.querySelectorAll(`[data-room="${room}"].time-current`).forEach(el => el.textContent = fmt(posSec));
+    document.querySelectorAll(`[data-room="${room}"].time-remaining`).forEach(el => el.textContent = '-'+fmt(durationSec-posSec));
 }
+
+// Add touch event support
+document.addEventListener('touchstart', (e) => {
+    const container = e.target.closest('.track-progress');
+    if (!container) return;
+    const room = container.dataset.room;
+    const duration = container.dataset.duration;
+    if(!duration) return;
+    
+    window.dragState = {room: room, duration: duration, container: container};
+    container.classList.add('notrans');
+    updateDrag(e.touches[0]);
+});
+
+document.addEventListener('touchmove', (e) => {
+    if(!window.dragState) return;
+    e.preventDefault();
+    updateDrag(e.touches[0]);
+});
+
+document.addEventListener('touchend', (e) => {
+    if(!window.dragState) return;
+    handleSeek(window.dragState.room, window.dragState.posSec, window.dragState.duration);
+    window.dragState.container.classList.remove('notrans');
+    window.dragState = null;
+});
 </script>
 
 <style>
@@ -804,6 +887,41 @@ function updateProgressBar(room,durationSec,posSec, skipInit, skipOverrideGuard)
 .room-link{
     color:#000 !important;
 }
+</style>
+
+<style>
+/* Material Design layout replacements */
+.container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.rooms-grid, .playlist-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.room-col, .playlist-col { /* grid items */ }
+
+/* Material Design card enhancements */
+.mdc-card { margin-bottom: 16px; }
+.playlist-heading { display: flex; justify-content: space-between; align-items: center; }
+.playlist-btn-group { display: flex; gap: 8px; }
+
+/* Room controls layout */
+.d-flex { display: flex; }
+.flex-grow-1 { flex: 1; }
+.room-controls { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.room-volume { display: flex; align-items: center; justify-content: center; min-width: 60px; height: 40px; background: #f5f5f5; border-radius: 20px; font-size: 14px; }
+
+/* Progress bar styling */
+.track-progress { position: relative; height: 6px; background: #e0e0e0; border-radius: 3px; margin: 8px 0; cursor: pointer; overflow: visible; }
+.progress-bar { height: 100%; background: #1976d2; border-radius: 3px; position: relative; transition: width 5s linear; }
+.track-progress.notrans .progress-bar { transition: none !important; }
+
+/* Time display */
+.time-display { display: flex; justify-content: space-between; width: 100%; font-size: 12px; color: #666; }
+
+/* Album art */
+.album-art { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; margin-right: 16px; background: #f0f0f0; }
+
+/* Section titles */
+.section-title { color: #1976d2; margin: 24px 0 16px; font-weight: 500; }
+
+/* Status overlay */
+#statusOverlay { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 24px; border-radius: 4px; z-index: 1000; display: none; }
 </style>
 
 </body>
