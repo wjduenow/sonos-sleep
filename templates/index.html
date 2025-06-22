@@ -365,6 +365,93 @@
                 font-size: 1rem;
             }
         }
+
+        /* Queue Modal Styles */
+        .queue-content {
+            min-width: 400px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .queue-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .queue-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background-color 0.2s ease;
+        }
+
+        .queue-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .queue-item:last-child {
+            border-bottom: none;
+        }
+
+        .queue-item.current-track {
+            background-color: rgba(25, 118, 210, 0.08);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .queue-item-index {
+            font-size: 0.875rem;
+            color: #666;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .queue-item.current-track .queue-item-index {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .queue-item-info {
+            flex: 1;
+        }
+
+        .queue-item-title {
+            font-weight: 500;
+            margin: 0 0 4px 0;
+            font-size: 0.9rem;
+        }
+
+        .queue-item-artist {
+            color: #666;
+            margin: 0;
+            font-size: 0.8rem;
+        }
+
+        .queue-item-duration {
+            font-size: 0.875rem;
+            color: #666;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .loading-message, .error-message {
+            text-align: center;
+            padding: 32px;
+            color: #666;
+        }
+
+        .error-message {
+            color: #d32f2f;
+        }
+
+        @media (max-width: 768px) {
+            .queue-content {
+                min-width: auto;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -419,6 +506,9 @@
                     <i class="material-icons">close</i>
                 </button>
                 <h2 class="modal-title" id="roomModalTitle">Room</h2>
+                <button class="mdc-icon-button" id="queueButton" title="View Queue">
+                    <i class="material-icons">queue_music</i>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="player-container" id="playerContainer">
@@ -487,6 +577,23 @@
         </div>
     </div>
 
+    <!-- Queue Modal -->
+    <div id="queueModal" class="modal-overlay" style="z-index: 1100;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="mdc-icon-button" id="closeQueueModal">
+                    <i class="material-icons">close</i>
+                </button>
+                <h2 class="modal-title">Current Queue</h2>
+            </div>
+            <div class="modal-body">
+                <div id="queueContent" class="queue-content">
+                    <div class="loading-message">Loading queue...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Material Components for Web JS -->
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 
@@ -548,6 +655,15 @@
                     this.closeRoomSelectModal();
                 });
 
+                // Queue modal controls
+                document.getElementById('queueButton').addEventListener('click', () => {
+                    this.openQueueModal();
+                });
+
+                document.getElementById('closeQueueModal').addEventListener('click', () => {
+                    this.closeQueueModal();
+                });
+
                 // Room select buttons
                 document.querySelectorAll('.room-select-button').forEach(button => {
                     button.addEventListener('click', (e) => {
@@ -604,6 +720,10 @@
 
                 document.getElementById('roomSelectModal').addEventListener('click', (e) => {
                     if (e.target === e.currentTarget) this.closeRoomSelectModal();
+                });
+
+                document.getElementById('queueModal').addEventListener('click', (e) => {
+                    if (e.target === e.currentTarget) this.closeQueueModal();
                 });
             }
 
@@ -665,6 +785,85 @@
             closeRoomSelectModal() {
                 document.getElementById('roomSelectModal').style.display = 'none';
                 this.selectedPlaylist = null;
+            }
+
+            async openQueueModal() {
+                if (!this.currentRoom) return;
+                
+                document.getElementById('queueModal').style.display = 'flex';
+                await this.loadQueue();
+            }
+
+            closeQueueModal() {
+                document.getElementById('queueModal').style.display = 'none';
+            }
+
+            async loadQueue() {
+                const queueContent = document.getElementById('queueContent');
+                queueContent.innerHTML = '<div class="loading-message">Loading queue...</div>';
+
+                try {
+                    const response = await fetch(`/queue?room=${encodeURIComponent(this.currentRoom)}&secret_key=${this.secretKey}&ajax=1`);
+                    const data = await response.json();
+
+                    if (data.status === 'ok' && data.queue && Array.isArray(data.queue)) {
+                        this.renderQueue(data.queue, data.current_index || 0);
+                    } else {
+                        queueContent.innerHTML = '<div class="error-message">No tracks in queue</div>';
+                    }
+                } catch (error) {
+                    console.error('Failed to load queue:', error);
+                    queueContent.innerHTML = '<div class="error-message">Failed to load queue</div>';
+                }
+            }
+
+            renderQueue(queue, currentIndex) {
+                const queueContent = document.getElementById('queueContent');
+                
+                if (queue.length === 0) {
+                    queueContent.innerHTML = '<div class="error-message">No tracks in queue</div>';
+                    return;
+                }
+
+                const queueList = document.createElement('ol');
+                queueList.className = 'queue-list';
+
+                queue.forEach((track, index) => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'queue-item';
+                    
+                    if (index === currentIndex) {
+                        listItem.classList.add('current-track');
+                    }
+
+                    listItem.innerHTML = `
+                        <div class="queue-item-index">${index + 1}</div>
+                        <div class="queue-item-info">
+                            <div class="queue-item-title">${this.escapeHtml(track.title || 'Unknown Title')}</div>
+                            <div class="queue-item-artist">${this.escapeHtml(track.artist || 'Unknown Artist')}</div>
+                        </div>
+                        <div class="queue-item-duration">${this.formatTime(track.duration || 0)}</div>
+                    `;
+
+                    queueList.appendChild(listItem);
+                });
+
+                queueContent.innerHTML = '';
+                queueContent.appendChild(queueList);
+
+                // Scroll current track into view
+                const currentTrackElement = queueList.querySelector('.current-track');
+                if (currentTrackElement) {
+                    setTimeout(() => {
+                        currentTrackElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                }
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
             }
 
             async updateRoomStatus() {
