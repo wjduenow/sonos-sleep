@@ -126,60 +126,55 @@ body{background:#fff8f2;}
 <div class="container">
 
   <h3 class="section-title">Rooms</h3>
-  <div class="rooms-grid" id="roomsAccordion">
+  <ul class="mdc-list rooms-list" id="roomsList">
     {% for zone in zones %}
-      <div class="room-col">
-      <div class="mdc-card room-card">
-        <div class="mdc-card__primary-action" tabindex="0">
-          <div class="mdc-card__media mdc-card__media--square">
-             <button type="button" class="mdc-button mdc-button--raised room-link" data-room="{{ zone.player_name }}">
-               <span class="mdc-button__label">{{ zone.player_name }}</span>
-             </button>
+      <li class="mdc-list-item room-item" data-room="{{ zone.player_name }}">
+        <span class="mdc-list-item__ripple"></span>
+        <button type="button" class="mdc-button mdc-button--unelevated room-link" data-room="{{ zone.player_name }}">
+          <span class="mdc-button__label">{{ zone.player_name }}</span>
+        </button>
+        <div class="room-details" style="display:none;">
+          <div class="d-flex">
+              <img src="" alt="art" class="album-art" data-room="{{ zone.player_name }}" />
+              <div class="flex-grow-1 room-detail">
+                 <p class="track-info" data-room="{{ zone.player_name }}">Loading...</p>
+                 <!-- Progress bar -->
+                 <div class="progress track-progress" data-room="{{ zone.player_name }}" style="height:6px;margin-bottom:2px; cursor:pointer;">
+                     <div class="progress-bar" role="progressbar" style="width:0%;" data-room="{{ zone.player_name }}"></div>
+                 </div>
+                 <div class="time-display" style="font-size:12px;width:100%;">
+                     <span class="time-current" data-room="{{ zone.player_name }}">0:00</span>
+                     <span class="time-remaining" data-room="{{ zone.player_name }}">-0:00</span>
+                 </div>
+                 <div class="room-controls volume-controls">
+                    <button class="mdc-icon-button volume-btn" data-change="down" data-room="{{ zone.player_name }}">
+                      <i class="material-icons mdc-icon-button__icon">remove</i>
+                    </button>
+                    <span class="room-volume circle-btn" data-room="{{ zone.player_name }}">--</span>
+                    <button class="mdc-icon-button volume-btn" data-change="up" data-room="{{ zone.player_name }}">
+                      <i class="material-icons mdc-icon-button__icon">add</i>
+                    </button>
+                 </div>
+                 <div class="room-controls playback-controls" style="margin-top:6px;">
+                    <button class="mdc-icon-button track-btn" data-dir="prev" data-room="{{ zone.player_name }}">
+                      <i class="material-icons mdc-icon-button__icon">skip_previous</i>
+                    </button>
+                    <button class="mdc-icon-button room-action" data-action="play" data-room="{{ zone.player_name }}">
+                      <i class="material-icons mdc-icon-button__icon">play_arrow</i>
+                    </button>
+                    <button class="mdc-icon-button track-btn" data-dir="next" data-room="{{ zone.player_name }}">
+                      <i class="material-icons mdc-icon-button__icon">skip_next</i>
+                    </button>
+                 </div>
+              </div>
           </div>
         </div>
-        <div id="room_{{ loop.index0 }}" class="room-collapse" style="display:none;">
-          <div class="mdc-card__content">
-            <div class="d-flex">
-                <img src="" alt="art" class="album-art" data-room="{{ zone.player_name }}" />
-                <div class="flex-grow-1 room-detail">
-                   <p class="track-info" data-room="{{ zone.player_name }}">Loading...</p>
-                   <!-- Progress bar -->
-                   <div class="progress track-progress" data-room="{{ zone.player_name }}" style="height:6px;margin-bottom:2px; cursor:pointer;">
-                       <div class="progress-bar" role="progressbar" style="width:0%;" data-room="{{ zone.player_name }}"></div>
-                   </div>
-                   <div class="time-display" style="font-size:12px;width:100%;">
-                       <span class="time-current" data-room="{{ zone.player_name }}">0:00</span>
-                       <span class="time-remaining" data-room="{{ zone.player_name }}">-0:00</span>
-                   </div>
-                   <div class="room-controls volume-controls">
-                      <button class="mdc-icon-button volume-btn" data-change="down" data-room="{{ zone.player_name }}">
-                        <i class="material-icons mdc-icon-button__icon">remove</i>
-                      </button>
-                      <span class="room-volume circle-btn" data-room="{{ zone.player_name }}">--</span>
-                      <button class="mdc-icon-button volume-btn" data-change="up" data-room="{{ zone.player_name }}">
-                        <i class="material-icons mdc-icon-button__icon">add</i>
-                      </button>
-                   </div>
-                   <div class="room-controls playback-controls" style="margin-top:6px;">
-                      <button class="mdc-icon-button track-btn" data-dir="prev" data-room="{{ zone.player_name }}">
-                        <i class="material-icons mdc-icon-button__icon">skip_previous</i>
-                      </button>
-                      <button class="mdc-icon-button room-action" data-action="play" data-room="{{ zone.player_name }}">
-                        <i class="material-icons mdc-icon-button__icon">play_arrow</i>
-                      </button>
-                      <button class="mdc-icon-button track-btn" data-dir="next" data-room="{{ zone.player_name }}">
-                        <i class="material-icons mdc-icon-button__icon">skip_next</i>
-                      </button>
-                   </div>
-                </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      </div>
+      </li>
     {% endfor %}
-  </div>
+  </ul>
 
+  <!-- Hide old grid layout -->
+  <div class="rooms-grid" id="roomsAccordion" style="display:none;"></div>
 
 <br />
 
@@ -396,8 +391,8 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const room = roomBtn.dataset.room;
 
-      const panel = roomBtn.closest('.mdc-card');
-      const bodyHtml = panel.querySelector('.mdc-card__content').innerHTML;
+      const panel = roomBtn.closest('.room-item');
+      const bodyHtml = panel.querySelector('.room-details').innerHTML;
       document.getElementById('roomModalTitle').textContent = room;
       document.getElementById('roomModalBody').innerHTML = bodyHtml;
 
@@ -533,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   showStatus(dir === 'next' ? 'Skipped to Next' : 'Went to Previous');
                   document.querySelectorAll(`[data-room="${room}"].track-info`).forEach(el => el.textContent = 'Loading...');
                   setTimeout(() => {
-                      const targetPanel = document.querySelector(`[data-room="${room}"].room-action`).closest('.room-collapse');
+                      const targetPanel = document.querySelector(`[data-room="${room}"].room-action`).closest('.room-details');
                       if(targetPanel){
                           targetPanel.dataset.loaded = 'false';
                           targetPanel.style.display = 'block';
@@ -939,6 +934,22 @@ document.addEventListener('touchend', (e) => {
 
 /* Status overlay */
 #statusOverlay { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #fff; padding: 10px 20px; border-radius: 4px; display: none; z-index: 1050; display:flex; align-items:center; gap:12px; cursor:pointer; transition: opacity .35s ease; }
+</style>
+
+<style>
+/* New rooms list layout */
+.rooms-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    padding:0;
+}
+.room-item{
+    list-style:none;
+}
+.room-item .room-link{
+    width:100%;
+}
 </style>
 
 </body>
