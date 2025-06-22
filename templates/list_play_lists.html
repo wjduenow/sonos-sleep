@@ -122,7 +122,7 @@ body{background:#fff8f2;}
       <div class="panel panel-default room-card">
         <div class="panel-heading">
           <h4 class="panel-title">
-            <a href="#" class="room-link" data-room="{{ zone.player_name }}">{{ zone.player_name }}</a>
+            <button type="button" class="btn btn-outline-secondary w-100 text-start room-link" data-room="{{ zone.player_name }}">{{ zone.player_name }}</button>
           </h4>
         </div>
         <div id="room_{{ loop.index0 }}" class="panel-collapse collapse">
@@ -188,8 +188,8 @@ body{background:#fff8f2;}
   <div class="modal-dialog modal-lg room-modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
+        <h5 class="modal-title" id="roomModalTitle">Room</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        <h4 class="modal-title" id="roomModalTitle">Room</h4>
       </div>
       <div class="modal-body" id="roomModalBody">
         <!-- dynamic room controls will be placed here -->
@@ -203,8 +203,8 @@ body{background:#fff8f2;}
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
+        <h5 class="modal-title">Select Room</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        <h4 class="modal-title">Select Room</h4>
       </div>
       <div class="modal-body">
         <div id="roomList" class="list-group">
