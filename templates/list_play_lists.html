@@ -10,7 +10,7 @@
 
 <body>
 
-<div id="statusOverlay"><span id="statusMessage"></span><i class="material-icons close-overlay" title="Close">close</i></div>
+<div id="statusOverlay" style="display:none;"><span id="statusMessage"></span><i class="material-icons close-overlay" title="Close">close</i></div>
 
 <style>
 #statusOverlay{
@@ -134,38 +134,45 @@ body{background:#fff8f2;}
           <span class="mdc-button__label">{{ zone.player_name }}</span>
         </button>
         <div class="room-details" style="display:none;">
-          <div class="d-flex">
+          <div class="room-stack">
               <img src="" alt="art" class="album-art" data-room="{{ zone.player_name }}" />
-              <div class="flex-grow-1 room-detail">
-                 <p class="track-info" data-room="{{ zone.player_name }}">Loading...</p>
-                 <!-- Progress bar -->
-                 <div class="progress track-progress" data-room="{{ zone.player_name }}" style="height:6px;margin-bottom:2px; cursor:pointer;">
-                     <div class="progress-bar" role="progressbar" style="width:0%;" data-room="{{ zone.player_name }}"></div>
-                 </div>
-                 <div class="time-display" style="font-size:12px;width:100%;">
-                     <span class="time-current" data-room="{{ zone.player_name }}">0:00</span>
-                     <span class="time-remaining" data-room="{{ zone.player_name }}">-0:00</span>
-                 </div>
-                 <div class="room-controls volume-controls">
-                    <button class="mdc-icon-button volume-btn" data-change="down" data-room="{{ zone.player_name }}">
-                      <i class="material-icons mdc-icon-button__icon">remove</i>
-                    </button>
-                    <span class="room-volume circle-btn" data-room="{{ zone.player_name }}">--</span>
-                    <button class="mdc-icon-button volume-btn" data-change="up" data-room="{{ zone.player_name }}">
-                      <i class="material-icons mdc-icon-button__icon">add</i>
-                    </button>
-                 </div>
-                 <div class="room-controls playback-controls" style="margin-top:6px;">
-                    <button class="mdc-icon-button track-btn" data-dir="prev" data-room="{{ zone.player_name }}">
-                      <i class="material-icons mdc-icon-button__icon">skip_previous</i>
-                    </button>
-                    <button class="mdc-icon-button room-action" data-action="play" data-room="{{ zone.player_name }}">
-                      <i class="material-icons mdc-icon-button__icon">play_arrow</i>
-                    </button>
-                    <button class="mdc-icon-button track-btn" data-dir="next" data-room="{{ zone.player_name }}">
-                      <i class="material-icons mdc-icon-button__icon">skip_next</i>
-                    </button>
-                 </div>
+
+              <!-- Scrubber -->
+              <div class="progress track-progress" data-room="{{ zone.player_name }}" style="height:6px;margin:8px 0; cursor:pointer;">
+                  <div class="progress-bar" role="progressbar" style="width:0%;" data-room="{{ zone.player_name }}"></div>
+              </div>
+
+              <!-- Time display -->
+              <div class="time-display" style="font-size:12px;width:100%;">
+                  <span class="time-current" data-room="{{ zone.player_name }}">0:00</span>
+                  <span class="time-remaining" data-room="{{ zone.player_name }}">-0:00</span>
+              </div>
+
+              <!-- Song title -->
+              <p class="track-info" data-room="{{ zone.player_name }}" style="margin:8px 0 4px; text-align:center;">Loading...</p>
+
+              <!-- Volume controls -->
+              <div class="room-controls volume-controls" style="justify-content:center; margin:6px 0;">
+                 <button class="mdc-icon-button volume-btn" data-change="down" data-room="{{ zone.player_name }}">
+                   <i class="material-icons mdc-icon-button__icon">remove</i>
+                 </button>
+                 <span class="room-volume circle-btn" data-room="{{ zone.player_name }}">--</span>
+                 <button class="mdc-icon-button volume-btn" data-change="up" data-room="{{ zone.player_name }}">
+                   <i class="material-icons mdc-icon-button__icon">add</i>
+                 </button>
+              </div>
+
+              <!-- Playback controls -->
+              <div class="room-controls playback-controls" style="justify-content:center; margin-top:6px;">
+                 <button class="mdc-icon-button track-btn" data-dir="prev" data-room="{{ zone.player_name }}">
+                   <i class="material-icons mdc-icon-button__icon">skip_previous</i>
+                 </button>
+                 <button class="mdc-icon-button room-action" data-action="play" data-room="{{ zone.player_name }}">
+                   <i class="material-icons mdc-icon-button__icon">play_arrow</i>
+                 </button>
+                 <button class="mdc-icon-button track-btn" data-dir="next" data-room="{{ zone.player_name }}">
+                   <i class="material-icons mdc-icon-button__icon">skip_next</i>
+                 </button>
               </div>
           </div>
         </div>
@@ -665,292 +672,4 @@ function updateProgressBar(room,durationSec,posSec, skipInit, skipOverrideGuard)
         container.dataset.lastPos = posSec;
     });
 
-    document.querySelectorAll(`[data-room="${room}"].time-current`).forEach(el => el.textContent = fmt(posSec));
-    document.querySelectorAll(`[data-room="${room}"].time-remaining`).forEach(el => el.textContent = '-'+fmt(durationSec-posSec));
-}
-
-// Add touch event support
-document.addEventListener('touchstart', (e) => {
-    const container = e.target.closest('.track-progress');
-    if (!container) return;
-    const room = container.dataset.room;
-    const duration = container.dataset.duration;
-    if(!duration) return;
-    
-    window.dragState = {room: room, duration: duration, container: container};
-    container.classList.add('notrans');
-    updateDrag(e.touches[0]);
-});
-
-document.addEventListener('touchmove', (e) => {
-    if(!window.dragState) return;
-    e.preventDefault();
-    updateDrag(e.touches[0]);
-});
-
-document.addEventListener('touchend', (e) => {
-    if(!window.dragState) return;
-    handleSeek(window.dragState.room, window.dragState.posSec, window.dragState.duration);
-    window.dragState.container.classList.remove('notrans');
-    window.dragState = null;
-});
-</script>
-
-<style>
-/* Larger buttons for room controls */
-.rooms-grid .btn-xs{
-    padding: 14px 22px;
-    font-size: 20px;
-    border-radius: 10px;
-}
-
-.rooms-grid .btn-xs i{
-    font-size:24px;
-}
-</style>
-
-<style>
-.playlist-grid{display:flex;flex-wrap:wrap;margin:-8px;}
-.playlist-col{padding:8px;width:100%;}
-@media(min-width:768px){.playlist-col{width:50%;}}
-@media(min-width:992px){.playlist-col{width:33.333%;}}
-@media(min-width:992px){.playlist-col{width:50%;}}
-</style>
-
-<style>
-.playlist-grid .btn-xs{
-    padding: 14px 22px;
-    font-size: 20px;
-    border-radius: 10px;
-}
-
-.playlist-btn-group .btn-xs{
-    width:56px;
-    height:56px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:24px;
-    padding:0;
-    border-radius:50%;
-    margin-left:8px;
-}
-
-.playlist-heading{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-
-.playlist-btn-group{
-    display:flex;
-    flex-wrap:nowrap;
-    align-items:center;
-}
-</style>
-
-<style>
-.room-controls{
-    display:flex;
-    flex-wrap:nowrap;
-    align-items:center;
-    gap:8px;
-}
-
-.room-controls .room-volume{
-    white-space:nowrap;
-}
-</style>
-
-<style>
-.room-controls .room-volume{
-     white-space:nowrap;
- }
-
-.album-art{
-    /* Right-side artwork needs to fill half of the card */
-    flex:0 0 50%;          /* occupy 50% of the horizontal space */
-    width:100%;            /* take full width of its flex column */
-    height:auto;           /* maintain aspect ratio */
-    max-height:160px;      /* reasonable upper bound so card doesn't grow too tall */
-    object-fit:cover;
-    object-fit:contain;
-    object-position:center;
-    border-radius:4px;
-    margin-left:10px;      /* gap between controls and art */
-    background:#e9e9e9;
-}
-</style>
-
-<style>
-/* Make the two halves (controls and album art) equal width */
-.room-card .d-flex{display:flex;}
-.room-card .room-detail{flex:0 0 50%;}
-.room-card .album-art{order:2;} /* push art to the right */
-.room-card .room-detail{order:1;}
-</style>
-
-<style>
-.circle-btn{
-    width:56px;
-    height:56px;
-    display:flex !important;
-    align-items:center;
-    justify-content:center;
-    font-size:24px;
-    padding:0;
-    border-radius:50%;
-}
-
-.room-volume.circle-btn{
-    background:#fff8f2;
-    font-size:18px;
-    line-height:56px;
-}
-</style>
-
-<style>
-@media (max-width: 768px){
-  .room-modal-dialog{
-    width:90%;
-    margin:5% auto;
-  }
-}
-</style>
-
-<style>
-.panel-collapse{display:none !important;}
-</style>
-
-<style>
-/* Layout tweaks for room modal: stack vertically & center */
-.room-modal-dialog .d-flex{
-    flex-direction: column;
-    align-items: center;
-}
-.room-modal-dialog .album-art{
-    flex:0 0 auto;
-    width:100%;
-    max-width:none;
-    max-height:60vh; /* image can grow but not exceed 60% of viewport */
-    margin:0 auto 15px;
-}
-.room-modal-dialog .room-detail{
-    flex:0 0 auto;
-    text-align:center;
-}
-.room-modal-dialog .room-controls{
-    justify-content:center;
-}
-/* Modal should use up to 90% of viewport height */
-.room-modal-dialog .modal-content{
-    max-height:90vh;
-    overflow-y:auto;
-}
-</style>
-
-<style>
-/* Smoothly animate progress bar width between updates */
-.track-progress .progress-bar{
-    transition: width 5s linear;
-    position: relative;
-}
-
-/* Circular knob at end of progress */
-.track-progress .progress-bar::after{
-    content:"";
-    position:absolute;
-    right:0;
-    top:50%;
-    width:24px;
-    height:24px;
-    border-radius:50%;
-    background:#ff7b54;
-    border:2px solid #fff;
-    transform:translate(50%,-50%); /* center vertically on bar then move */
-    box-shadow:0 0 2px rgba(0,0,0,.4);
-    z-index:10; /* ensure above bar */
-}
-</style>
-
-<style>
-/* hide transition for initial set */
-.track-progress.notrans .progress-bar{
-    transition:none !important;
-}
-</style>
-
-<style>
-.track-progress{
-    overflow: visible !important;
-}
-</style>
-
-<style>
-.time-display{
-    display:flex;
-    justify-content:space-between;
-    width:100%;
-}
-</style>
-
-<style>
-/* Force room buttons to have dark text */
-.room-link{
-    color:#000 !important;
-}
-</style>
-
-<style>
-/* Material Design layout replacements */
-.container { max-width: 1200px; margin: 0 auto; padding: 16px; }
-.rooms-grid, .playlist-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-.room-col, .playlist-col { /* grid items */ }
-
-/* Material Design card enhancements */
-.mdc-card { margin-bottom: 16px; }
-.playlist-heading { display: flex; justify-content: space-between; align-items: center; }
-.playlist-btn-group { display: flex; gap: 8px; }
-
-/* Room controls layout */
-.d-flex { display: flex; }
-.flex-grow-1 { flex: 1; }
-.room-controls { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-.room-volume { display: flex; align-items: center; justify-content: center; min-width: 60px; height: 40px; background: #f5f5f5; border-radius: 20px; font-size: 14px; }
-
-/* Progress bar styling */
-.track-progress { position: relative; height: 6px; background: #e0e0e0; border-radius: 3px; margin: 8px 0; cursor: pointer; overflow: visible; }
-.progress-bar { height: 100%; background: #1976d2; border-radius: 3px; position: relative; transition: width 5s linear; }
-.track-progress.notrans .progress-bar { transition: none !important; }
-
-/* Time display */
-.time-display { display: flex; justify-content: space-between; width: 100%; font-size: 12px; color: #666; }
-
-/* Album art */
-.album-art { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; margin-right: 16px; background: #f0f0f0; }
-
-/* Section titles */
-.section-title { color: #1976d2; margin: 24px 0 16px; font-weight: 500; }
-
-/* Status overlay */
-#statusOverlay { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #fff; padding: 10px 20px; border-radius: 4px; display: none; z-index: 1050; display:flex; align-items:center; gap:12px; cursor:pointer; transition: opacity .35s ease; }
-</style>
-
-<style>
-/* New rooms list layout */
-.rooms-list{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    padding:0;
-}
-.room-item{
-    list-style:none;
-}
-.room-item .room-link{
-    width:100%;
-}
-</style>
-
-</body>
-</html>
+    document.querySelectorAll(`[data-room="${room}"].time-current`
