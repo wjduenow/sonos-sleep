@@ -678,5 +678,35 @@ function updateProgressBar(room,durationSec,posSec, skipInit, skipOverrideGuard)
 }
 </script>
 
+<style>
+ /* Centered vertical layout for items within the room modal */
+ .room-stack{
+     display:flex;
+     flex-direction:column;
+     align-items:center;
+     text-align:center;
+     gap:8px;
+ }
+ .room-stack .album-art{
+     width:80%;
+     max-width:300px;
+     height:auto;
+     border-radius:8px;
+ }
+ .room-stack .track-progress{
+     width:100%;
+     max-width:400px;
+ }
+ .room-stack .time-display{
+     justify-content:space-between;
+     width:100%;
+     max-width:400px;
+ }
+ /* Extra spacing between room buttons */
+ .rooms-list{
+     gap:12px;
+ }
+</style>
+
 </body>
 </html>
