@@ -2,7 +2,7 @@
   "name": "Sonos Controller",
   "short_name": "Sonos",
   "description": "Control your Sonos speakers and playlists",
-  "start_url": "/",
+  "start_url": "/?secret_key=mixelplk",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1976d2",
