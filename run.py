@@ -60,7 +60,7 @@ def list_play_lists():
   playlist_titles = [pl.title for pl in playlists]
 
   # Render without per-room status (will be fetched client-side)
-  return render_template('list_play_lists.html', zones = zones, playlists = playlist_titles, secret_key = app.secret_key)
+  return render_template('index.html', zones = zones, playlists = playlist_titles, secret_key = app.secret_key)
 
 @app.route('/sleep', methods=['GET', 'POST'])
 def sleep():
@@ -484,6 +484,124 @@ def room_seek():
 
     flash(f"Seeked to {position_str} in {room}", 'info')
     return redirect(f"/?secret_key={secret_key}")
+
+# ---------------------------------------------------------
+#   Queue endpoint
+# ---------------------------------------------------------
+
+@app.route('/queue', methods=['GET'])
+def get_queue():
+    """Return the current queue for the requested room as JSON."""
+    
+    if request.args.get("secret_key") != app.secret_key:
+        return jsonify({"error": "Forbidden"}), HTTPStatus.HTTP_403_FORBIDDEN
+
+    room = request.args.get('room')
+    if not room:
+        return jsonify({"error": "Missing room parameter"}), HTTPStatus.HTTP_400_BAD_REQUEST
+
+    try:
+        sonos = _find_sonos(room)
+        if sonos is None:
+            return jsonify({"error": "Room not found"}), HTTPStatus.HTTP_404_NOT_FOUND
+
+        # Get the current queue
+        queue = sonos.get_queue()
+        
+        # Get current track info to determine position in queue
+        current_track_info = sonos.get_current_track_info()
+        current_index = 0
+        
+        # Try to get the current track index from queue position
+        try:
+            queue_position = current_track_info.get('playlist_position', '1')
+            if queue_position and queue_position.isdigit():
+                current_index = int(queue_position) - 1  # Convert to 0-based index
+        except (ValueError, TypeError):
+            current_index = 0
+
+        # Convert queue items to JSON
+        queue_items = []
+        for i, track in enumerate(queue):
+            # Extract duration in seconds
+            duration_str = getattr(track, 'duration', '') or ''
+            duration_sec = 0
+            if duration_str:
+                try:
+                    # Parse duration string (format: H:MM:SS or MM:SS)
+                    time_parts = duration_str.split(':')
+                    if len(time_parts) == 3:
+                        h, m, s = map(int, time_parts)
+                        duration_sec = h * 3600 + m * 60 + s
+                    elif len(time_parts) == 2:
+                        m, s = map(int, time_parts)
+                        duration_sec = m * 60 + s
+                except (ValueError, TypeError):
+                    duration_sec = 0
+
+            queue_items.append({
+                "title": getattr(track, 'title', 'Unknown Title'),
+                "artist": getattr(track, 'creator', '') or getattr(track, 'artist', 'Unknown Artist'),
+                "album": getattr(track, 'album', ''),
+                "duration": duration_sec
+            })
+
+        return jsonify({
+            'status': 'ok',
+            'queue': queue_items,
+            'current_index': current_index,
+            'total_tracks': len(queue_items)
+        })
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to get queue: {str(e)}"}), HTTPStatus.HTTP_500_INTERNAL_SERVER_ERROR
+
+# ---------------------------------------------------------
+#   Jump to track in queue
+# ---------------------------------------------------------
+
+@app.route('/jump_to_track', methods=['GET', 'POST'])
+def jump_to_track():
+    """Jump to a specific track in the queue by index."""
+    
+    if request.args.get("secret_key") != app.secret_key:
+        return jsonify({"error": "Forbidden"}), HTTPStatus.HTTP_403_FORBIDDEN
+
+    room = request.args.get('room')
+    track_index = request.args.get('track_index')
+    
+    if not room:
+        return jsonify({"error": "Missing room parameter"}), HTTPStatus.HTTP_400_BAD_REQUEST
+    
+    if track_index is None:
+        return jsonify({"error": "Missing track_index parameter"}), HTTPStatus.HTTP_400_BAD_REQUEST
+
+    try:
+        track_index = int(track_index)
+    except ValueError:
+        return jsonify({"error": "Invalid track_index parameter"}), HTTPStatus.HTTP_400_BAD_REQUEST
+
+    try:
+        sonos = _find_sonos(room)
+        if sonos is None:
+            return jsonify({"error": "Room not found"}), HTTPStatus.HTTP_404_NOT_FOUND
+
+        # Jump to the specified track in the queue (soco uses 0-based indexing)
+        sonos.play_from_queue(track_index)
+
+        if request.args.get('ajax') == '1':
+            return jsonify({'status': 'ok', 'track_index': track_index})
+
+        flash(f"Jumped to track {track_index + 1} in {room}", 'success')
+        return redirect(f"/?secret_key={request.args.get('secret_key')}")
+
+    except Exception as e:
+        error_msg = f"Failed to jump to track: {str(e)}"
+        if request.args.get('ajax') == '1':
+            return jsonify({"error": error_msg}), HTTPStatus.HTTP_500_INTERNAL_SERVER_ERROR
+        else:
+            flash(error_msg, 'error')
+            return redirect(f"/?secret_key={request.args.get('secret_key')}")
 
 # create mapping for http_status.* names used in code
 class _HttpCodes:
