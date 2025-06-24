@@ -15,6 +15,7 @@ from http import HTTPStatus
 import soco
 import asyncio
 import time
+import requests
 from config import ROOMS, SECRET_KEY
 
 
@@ -602,6 +603,49 @@ def jump_to_track():
         else:
             flash(error_msg, 'error')
             return redirect(f"/?secret_key={request.args.get('secret_key')}")
+
+# ---------------------------------------------------------
+#   Lyrics API endpoint
+# ---------------------------------------------------------
+
+@app.route('/lyrics', methods=['GET'])
+def get_lyrics():
+    """Fetch lyrics for a song from lyrics.ovh API."""
+    
+    if request.args.get("secret_key") != app.secret_key:
+        return jsonify({"error": "Forbidden"}), HTTPStatus.FORBIDDEN
+
+    artist = request.args.get('artist')
+    title = request.args.get('title')
+    
+    if not artist or not title:
+        return jsonify({"error": "Missing artist or title parameter"}), HTTPStatus.BAD_REQUEST
+
+    try:
+        # Use lyrics.ovh API - it's free and doesn't require API key
+        url = f"https://api.lyrics.ovh/v1/{artist}/{title}"
+        response = requests.get(url, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if 'lyrics' in data:
+                return jsonify({
+                    'status': 'ok',
+                    'lyrics': data['lyrics'],
+                    'artist': artist,
+                    'title': title
+                })
+            else:
+                return jsonify({"error": "No lyrics found"}), HTTPStatus.NOT_FOUND
+        else:
+            return jsonify({"error": "Lyrics not found"}), HTTPStatus.NOT_FOUND
+            
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "Request timeout - lyrics service unavailable"}), HTTPStatus.REQUEST_TIMEOUT
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Failed to fetch lyrics: {str(e)}"}), HTTPStatus.INTERNAL_SERVER_ERROR
+    except Exception as e:
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 # create mapping for http_status.* names used in code
 class _HttpCodes:

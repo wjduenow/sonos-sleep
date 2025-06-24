@@ -295,6 +295,50 @@
             font-weight: 500;
         }
 
+        .track-info-clickable {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--primary-color);
+            text-decoration: underline;
+            text-decoration-color: transparent;
+            transition: all 0.2s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: inline-block;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .track-info-clickable:hover {
+            text-decoration-color: var(--primary-color);
+            background-color: rgba(25, 118, 210, 0.04);
+            transform: translateY(-1px);
+        }
+
+        .track-info-clickable:active {
+            transform: translateY(0);
+        }
+
+        .track-info-clickable:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        .track-info-clickable:disabled {
+            color: inherit;
+            cursor: default;
+            text-decoration: none;
+            background: none;
+            transform: none;
+        }
+
+        .track-info-clickable:disabled:hover {
+            text-decoration: none;
+            background: none;
+            transform: none;
+        }
+
         .controls-row {
             display: flex;
             align-items: center;
@@ -469,6 +513,80 @@
             }
         }
 
+        /* Lyrics Modal Styles */
+        .lyrics-content {
+            min-width: 400px;
+            max-width: 600px;
+            max-height: 70vh;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .lyrics-text {
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            color: #333;
+            white-space: pre-line;
+            padding: 20px;
+            margin: 0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .lyrics-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .lyrics-song-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0 0 8px 0;
+        }
+
+        .lyrics-artist-name {
+            font-size: 1.1rem;
+            color: #666;
+            margin: 0;
+        }
+
+        .lyrics-error {
+            text-align: center;
+            padding: 40px 20px;
+            color: #d32f2f;
+            font-size: 1rem;
+        }
+
+        .lyrics-not-found {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .lyrics-content {
+                min-width: auto;
+                width: 100%;
+            }
+            
+            .lyrics-text {
+                font-size: 0.9rem;
+                padding: 16px;
+            }
+            
+            .lyrics-song-title {
+                font-size: 1.3rem;
+            }
+            
+            .lyrics-artist-name {
+                font-size: 1rem;
+            }
+        }
+
         /* Native App Enhancements */
         
         /* Disable text selection for app-like feel */
@@ -605,7 +723,7 @@
                         </div>
                     </div>
 
-                    <p id="trackInfo" class="track-info">Loading...</p>
+                    <button id="trackInfo" class="track-info track-info-clickable" title="Click to view lyrics">Loading...</button>
 
                     <div class="controls-row">
                         <div class="volume-controls">
@@ -670,6 +788,23 @@
             <div class="modal-body">
                 <div id="queueContent" class="queue-content">
                     <div class="loading-message">Loading queue...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lyrics Modal -->
+    <div id="lyricsModal" class="modal-overlay" style="z-index: 1200;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="mdc-icon-button" id="closeLyricsModal">
+                    <i class="material-icons">close</i>
+                </button>
+                <h2 class="modal-title" id="lyricsModalTitle">Lyrics</h2>
+            </div>
+            <div class="modal-body">
+                <div id="lyricsContent" class="lyrics-content">
+                    <div class="loading-message">Loading lyrics...</div>
                 </div>
             </div>
         </div>
@@ -844,6 +979,16 @@
                     this.closeQueueModal();
                 });
 
+                // Lyrics modal controls
+                document.getElementById('trackInfo').addEventListener('click', () => {
+                    this.hapticFeedback('light');
+                    this.openLyricsModal();
+                });
+
+                document.getElementById('closeLyricsModal').addEventListener('click', () => {
+                    this.closeLyricsModal();
+                });
+
                 // Room select buttons
                 document.querySelectorAll('.room-select-button').forEach(button => {
                     button.addEventListener('click', (e) => {
@@ -904,6 +1049,10 @@
 
                 document.getElementById('queueModal').addEventListener('click', (e) => {
                     if (e.target === e.currentTarget) this.closeQueueModal();
+                });
+
+                document.getElementById('lyricsModal').addEventListener('click', (e) => {
+                    if (e.target === e.currentTarget) this.closeLyricsModal();
                 });
 
                 // Queue item clicks
@@ -988,6 +1137,87 @@
 
             closeQueueModal() {
                 document.getElementById('queueModal').style.display = 'none';
+            }
+
+            async openLyricsModal() {
+                if (!this.currentRoom) return;
+                
+                // Check if track info is clickable (has a track playing)
+                const trackInfoEl = document.getElementById('trackInfo');
+                if (trackInfoEl.disabled || !trackInfoEl.classList.contains('track-info-clickable')) {
+                    this.showStatus('No track currently playing');
+                    return;
+                }
+                
+                document.getElementById('lyricsModal').style.display = 'flex';
+                await this.loadLyrics();
+            }
+
+            closeLyricsModal() {
+                document.getElementById('lyricsModal').style.display = 'none';
+            }
+
+            async loadLyrics() {
+                const lyricsContent = document.getElementById('lyricsContent');
+                lyricsContent.innerHTML = '<div class="loading-message">Loading lyrics...</div>';
+
+                try {
+                    // First get current track info
+                    const statusResponse = await fetch(`/room_status?room=${encodeURIComponent(this.currentRoom)}&secret_key=${this.secretKey}&ajax=1`);
+                    const statusData = await statusResponse.json();
+
+                    if (statusData.status !== 'ok' || !statusData.title || !statusData.artist) {
+                        lyricsContent.innerHTML = '<div class="lyrics-error">No track information available</div>';
+                        return;
+                    }
+
+                    const { title, artist } = statusData;
+                    
+                    // Update modal title
+                    document.getElementById('lyricsModalTitle').textContent = `Lyrics - ${title}`;
+
+                    // Fetch lyrics
+                    const lyricsResponse = await fetch(`/lyrics?artist=${encodeURIComponent(artist)}&title=${encodeURIComponent(title)}&secret_key=${this.secretKey}`);
+                    const lyricsData = await lyricsResponse.json();
+
+                    if (lyricsData.status === 'ok' && lyricsData.lyrics) {
+                        this.renderLyrics(lyricsData.lyrics, lyricsData.title, lyricsData.artist);
+                    } else {
+                        lyricsContent.innerHTML = `
+                            <div class="lyrics-not-found">
+                                <div class="lyrics-header">
+                                    <h3 class="lyrics-song-title">${this.escapeHtml(title)}</h3>
+                                    <p class="lyrics-artist-name">${this.escapeHtml(artist)}</p>
+                                </div>
+                                <p>Sorry, lyrics not found for this track.</p>
+                                <p style="font-size: 0.9rem; margin-top: 16px; color: #999;">
+                                    Lyrics are provided by <a href="https://lyrics.ovh" target="_blank" style="color: var(--primary-color);">lyrics.ovh</a>
+                                </p>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Failed to load lyrics:', error);
+                    lyricsContent.innerHTML = '<div class="lyrics-error">Failed to load lyrics. Please try again.</div>';
+                }
+            }
+
+            renderLyrics(lyrics, title, artist) {
+                const lyricsContent = document.getElementById('lyricsContent');
+                
+                // Clean up lyrics text
+                const cleanedLyrics = lyrics.trim();
+                
+                lyricsContent.innerHTML = `
+                    <div class="lyrics-header">
+                        <h3 class="lyrics-song-title">${this.escapeHtml(title)}</h3>
+                        <p class="lyrics-artist-name">${this.escapeHtml(artist)}</p>
+                    </div>
+                    <div class="lyrics-text">${this.escapeHtml(cleanedLyrics)}</div>
+                    <p style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #999;">
+                        Lyrics provided by <a href="https://lyrics.ovh" target="_blank" style="color: var(--primary-color);">lyrics.ovh</a>
+                    </p>
+                `;
             }
 
             async loadQueue() {
@@ -1081,8 +1311,21 @@
             }
 
             updatePlayerUI(data) {
-                // Update track info
-                document.getElementById('trackInfo').textContent = data.track || 'No track playing';
+                // Update track info and clickable state
+                const trackInfoEl = document.getElementById('trackInfo');
+                const hasTrack = data.title && data.artist && data.track && data.track !== 'No track playing';
+                
+                if (hasTrack) {
+                    trackInfoEl.textContent = data.track;
+                    trackInfoEl.classList.add('track-info-clickable');
+                    trackInfoEl.title = 'Click to view lyrics';
+                    trackInfoEl.disabled = false;
+                } else {
+                    trackInfoEl.textContent = data.track || 'No track playing';
+                    trackInfoEl.classList.remove('track-info-clickable');
+                    trackInfoEl.title = '';
+                    trackInfoEl.disabled = true;
+                }
                 
                 // Update volume
                 document.getElementById('volumeDisplay').textContent = `Vol ${data.volume || '--'}`;
