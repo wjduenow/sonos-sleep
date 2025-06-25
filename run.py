@@ -151,12 +151,29 @@ def sonos_playlist():
 
   try:
     play_playlist(room, play_list, room_volume)
+    
+    # Handle AJAX requests
+    if request.args.get('ajax') == '1':
+        return jsonify({
+            'status': 'ok',
+            'message': f'Playing {play_list} in {room} at {room_volume} volume'
+        })
+    
     flash("Playing %s in %s at %s volume" % (play_list, room, str(room_volume)), 'success')
     return redirect("/?secret_key=%s" % (secret_key))
-    #return ("Playing %s in %s at %s volume" % (play_list, room, room_volume))
   except Exception as e:
-     flash("error: %s in (room: %s)" % (e, room), 'error')
-     #return ("error: %s in (room: %s)" % (e, room))    
+     error_msg = "error: %s in (room: %s)" % (e, room)
+     
+     # Handle AJAX requests
+     if request.args.get('ajax') == '1':
+         return jsonify({
+             'status': 'error',
+             'error': str(e),
+             'message': error_msg
+         }), HTTPStatus.INTERNAL_SERVER_ERROR
+     
+     flash(error_msg, 'error')
+     return redirect("/?secret_key=%s" % (secret_key))    
 
 # ---------------------------------------------------------
 #   API ENDPOINTS

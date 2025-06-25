@@ -916,22 +916,24 @@
                 };
 
                 // PWA install prompt
-                window.addEventListener('beforeinstallprompt', (e) => {
+                const handleInstallPrompt = (e) => {
                     e.preventDefault();
                     this.installPrompt = e;
                     this.showInstallButton();
-                });
+                };
+                window.addEventListener('beforeinstallprompt', handleInstallPrompt);
 
                 // Online/offline detection
-                window.addEventListener('online', () => {
+                const handleOnline = () => {
                     this.isOnline = true;
                     this.showStatus('Connection restored', 2000);
-                });
-
-                window.addEventListener('offline', () => {
+                };
+                const handleOffline = () => {
                     this.isOnline = false;
                     this.showStatus('No internet connection', 5000);
-                });
+                };
+                window.addEventListener('online', handleOnline);
+                window.addEventListener('offline', handleOffline);
 
                 // Prevent zoom on double tap (iOS)
                 let lastTouchEnd = 0;
@@ -1746,10 +1748,52 @@
             async playPlaylistInRoom(playlist, room) {
                 this.closeRoomSelectModal();
                 
+                // Add haptic feedback
+                this.hapticFeedback('medium');
+                
+                // Show loading status
+                this.showStatus(`Starting "${playlist}" in ${room}...`, 2000);
+                
                 try {
-                    window.location.href = `/sonos_playlist?play_list=${encodeURIComponent(playlist)}&room=${encodeURIComponent(room)}&secret_key=${this.secretKey}`;
+                    const response = await fetch(`/sonos_playlist?play_list=${encodeURIComponent(playlist)}&room=${encodeURIComponent(room)}&secret_key=${this.secretKey}&ajax=1`);
+                    const data = await response.json();
+                    
+                    if (response.ok && data.status === 'ok') {
+                        // Success haptic feedback
+                        this.hapticFeedback('success');
+                        this.showStatus(`Now playing "${playlist}" in ${room}`, 4000);
+                        
+                        // If we're currently viewing this room, update the player
+                        if (this.currentRoom === room) {
+                            // Delay slightly to allow the playlist to start, then update
+                            setTimeout(() => {
+                                this.updateRoomStatus();
+                            }, 1500);
+                        }
+                    } else {
+                        // Handle server-side errors
+                        const errorMsg = data.error || data.message || `Server error (${response.status})`;
+                        throw new Error(errorMsg);
+                    }
                 } catch (error) {
                     console.error('Failed to play playlist:', error);
+                    
+                    // Error haptic feedback
+                    this.hapticFeedback('error');
+                    
+                    // Show user-friendly error message
+                    let errorMessage = `Failed to play "${playlist}" in ${room}`;
+                    if (error.message.includes('Forbidden')) {
+                        errorMessage += ' - Access denied';
+                    } else if (error.message.includes('not found')) {
+                        errorMessage += ' - Room or playlist not found';
+                    } else if (!navigator.onLine) {
+                        errorMessage += ' - No internet connection';
+                    } else {
+                        errorMessage += ' - Please try again';
+                    }
+                    
+                    this.showStatus(errorMessage, 6000);
                 }
             }
 
