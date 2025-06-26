@@ -27,13 +27,50 @@
     
     <style>
         :root {
-            --primary-color: #1976d2;
-            --primary-variant: #1565c0;
-            --secondary-color: #03dac6;
+            /* Modern vibrant color palette */
+            --primary-color: #6366f1;
+            --primary-variant: #4f46e5;
+            --primary-light: #a5b4fc;
+            --secondary-color: #f59e0b;
+            --secondary-variant: #d97706;
+            --accent-color: #ec4899;
+            --accent-light: #f9a8d4;
+            
+            /* Surface colors with depth */
             --surface-color: #ffffff;
-            --background-color: #f5f5f5;
-            --on-surface: #000000;
+            --surface-variant: #f8fafc;
+            --surface-container: #f1f5f9;
+            --background-color: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --background-overlay: rgba(255, 255, 255, 0.95);
+            
+            /* Text colors */
+            --on-surface: #1e293b;
+            --on-surface-variant: #64748b;
             --on-primary: #ffffff;
+            --on-secondary: #ffffff;
+            
+            /* Interactive states */
+            --hover-overlay: rgba(99, 102, 241, 0.08);
+            --active-overlay: rgba(99, 102, 241, 0.12);
+            --focus-ring: rgba(99, 102, 241, 0.3);
+            
+            /* Shadows and elevation */
+            --shadow-1: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-3: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-4: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+            
+            /* Border radius */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            
+            /* Transitions */
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -42,116 +79,231 @@
 
         body {
             margin: 0;
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--background-color);
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--background-color);
             color: var(--on-surface);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--background-overlay);
+            backdrop-filter: blur(10px);
+            z-index: -1;
         }
 
         .app-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 16px;
+            padding: 24px;
+            position: relative;
         }
 
         .section-header {
-            margin: 32px 0 24px;
-            color: var(--primary-color);
-            font-size: 1.5rem;
-            font-weight: 500;
+            margin: 40px 0 28px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            position: relative;
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            border-radius: 2px;
         }
 
         /* Status Toast */
         .status-toast {
             position: fixed;
-            top: 24px;
+            top: 32px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.87);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            color: var(--on-surface);
+            padding: 16px 24px;
+            border-radius: var(--radius-xl);
             display: none;
             align-items: center;
             gap: 12px;
             z-index: 1000;
             cursor: pointer;
-            transition: opacity 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 500;
+        }
+
+        .status-toast:hover {
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: var(--shadow-4);
         }
 
         .status-toast .close-icon {
             font-size: 20px;
-            opacity: 0.8;
+            opacity: 0.6;
+            transition: opacity var(--transition-fast);
+        }
+
+        .status-toast:hover .close-icon {
+            opacity: 1;
         }
 
         /* Room Grid */
         .rooms-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-            margin-bottom: 48px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 56px;
         }
 
         .room-card {
             background: var(--surface-color);
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: box-shadow 0.2s ease;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-2);
+            transition: all var(--transition-normal);
             overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .room-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
         }
 
         .room-card:hover {
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-3);
+        }
+
+        .room-card:hover::before {
+            opacity: 1;
+        }
+
+        .room-card:active {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-2);
         }
 
         .room-button {
             width: 100%;
-            padding: 24px;
+            padding: 28px 24px;
             background: none;
             border: none;
             cursor: pointer;
             text-align: center;
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: var(--primary-color);
-            transition: background-color 0.2s ease;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--on-surface);
+            transition: all var(--transition-normal);
+            position: relative;
+            z-index: 1;
         }
 
-        .room-button:hover {
-            background-color: rgba(25, 118, 210, 0.04);
+        .room-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--hover-overlay);
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+
+        .room-button:hover::before {
+            opacity: 1;
+        }
+
+        .room-button:active::before {
+            background: var(--active-overlay);
+            opacity: 1;
         }
 
         /* Playlist Grid */
         .playlists-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
         }
 
         .playlist-card {
             background: var(--surface-color);
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-2);
             overflow: hidden;
+            transition: all var(--transition-normal);
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .playlist-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--secondary-color) 0%, var(--accent-color) 100%);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .playlist-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-3);
+        }
+
+        .playlist-card:hover::before {
+            opacity: 1;
         }
 
         .playlist-header {
-            padding: 20px;
+            padding: 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.03) 0%, rgba(236, 72, 153, 0.03) 100%);
         }
 
         .playlist-title {
-            font-size: 1.1rem;
-            font-weight: 500;
+            font-size: 1.25rem;
+            font-weight: 600;
             margin: 0;
+            color: var(--on-surface);
+            letter-spacing: -0.025em;
         }
 
         .playlist-actions {
             display: flex;
-            gap: 8px;
+            gap: 4px;
         }
 
         .playlist-content {
@@ -187,39 +339,62 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            animation: fadeIn var(--transition-normal) ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px) scale(0.98);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .modal-content {
             background: var(--surface-color);
-            border-radius: 16px;
+            border-radius: var(--radius-xl);
             max-width: 90vw;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--shadow-4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideUp var(--transition-normal) ease-out;
         }
 
         .modal-header {
-            padding: 24px 24px 16px;
+            padding: 28px 28px 20px;
             display: flex;
             align-items: center;
             gap: 16px;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.3);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
         }
 
         .modal-title {
-            font-size: 1.25rem;
-            font-weight: 500;
+            font-size: 1.5rem;
+            font-weight: 700;
             margin: 0;
             flex: 1;
+            color: var(--on-surface);
+            letter-spacing: -0.025em;
         }
 
         .modal-body {
-            padding: 24px;
+            padding: 28px;
         }
 
         /* Room Player Modal */
@@ -227,25 +402,32 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 24px;
-            min-width: 400px;
+            gap: 20px;
+            min-width: 420px;
+            padding: 16px;
         }
 
         .album-art {
-            width: 200px;
-            height: 200px;
-            border-radius: 12px;
-            background: #f0f0f0;
+            width: 240px;
+            height: 240px;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, var(--surface-variant) 0%, var(--surface-container) 100%);
             object-fit: cover;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: all var(--transition-slow);
             position: relative;
             z-index: 1;
+            box-shadow: var(--shadow-3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
         }
 
         .album-art:hover {
-            transform: scale(1.02);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transform: scale(1.03) rotate(1deg);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .album-art:active {
+            transform: scale(1.01);
         }
 
         .album-art.expanded {
@@ -287,23 +469,29 @@
 
         .track-progress-container {
             width: 100%;
-            max-width: 300px;
+            max-width: 320px;
         }
 
         .track-progress {
             width: 100%;
-            height: 6px;
-            background: #e0e0e0;
-            border-radius: 3px;
+            height: 8px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 4px;
             position: relative;
             cursor: pointer;
             overflow: visible;
+            transition: all var(--transition-fast);
+        }
+
+        .track-progress:hover {
+            height: 10px;
+            background: rgba(99, 102, 241, 0.15);
         }
 
         .progress-bar {
             height: 100%;
-            background: var(--primary-color);
-            border-radius: 3px;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            border-radius: 4px;
             position: relative;
             transition: width 5s linear;
         }
@@ -313,101 +501,233 @@
             position: absolute;
             right: 0;
             top: 50%;
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             background: var(--primary-color);
-            border: 2px solid white;
+            border: 3px solid white;
             transform: translate(50%, -50%);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-2);
+            transition: all var(--transition-fast);
+        }
+
+        .track-progress:hover .progress-bar::after {
+            width: 24px;
+            height: 24px;
+            box-shadow: var(--shadow-3);
         }
 
         .track-progress.notrans .progress-bar {
             transition: none !important;
+            animation: none !important;
+        }
+
+        .track-progress.notrans .progress-bar::after {
+            transition: none !important;
+            animation: none !important;
         }
 
         .time-display {
             display: flex;
             justify-content: space-between;
             margin-top: 8px;
-            font-size: 0.875rem;
-            color: #666;
+            font-size: 0.95rem;
+            color: var(--on-surface-variant);
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
         }
 
         .track-info {
             text-align: center;
             margin: 0;
-            font-size: 1.1rem;
-            font-weight: 500;
+            font-size: 1.25rem;
+            font-weight: 600;
+            line-height: 1.4;
         }
 
         .track-info-clickable {
-            background: none;
-            border: none;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
             cursor: pointer;
-            color: var(--primary-color);
-            text-decoration: underline;
-            text-decoration-color: transparent;
-            transition: all 0.2s ease;
-            padding: 8px 16px;
-            border-radius: 8px;
+            color: var(--on-surface);
+            text-decoration: none;
+            transition: all var(--transition-normal);
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
             display: inline-block;
             max-width: 100%;
             word-wrap: break-word;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .track-info-clickable::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
         }
 
         .track-info-clickable:hover {
-            text-decoration-color: var(--primary-color);
-            background-color: rgba(25, 118, 210, 0.04);
-            transform: translateY(-1px);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-2);
+        }
+
+        .track-info-clickable:hover::before {
+            left: 100%;
         }
 
         .track-info-clickable:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-1);
         }
 
         .track-info-clickable:focus {
-            outline: 2px solid var(--primary-color);
+            outline: 2px solid var(--focus-ring);
             outline-offset: 2px;
         }
 
         .track-info-clickable:disabled {
-            color: inherit;
+            color: var(--on-surface-variant);
             cursor: default;
-            text-decoration: none;
-            background: none;
+            background: var(--surface-variant);
+            border-color: transparent;
             transform: none;
+            box-shadow: none;
         }
 
         .track-info-clickable:disabled:hover {
-            text-decoration: none;
-            background: none;
+            background: var(--surface-variant);
+            border-color: transparent;
             transform: none;
+            box-shadow: none;
+        }
+
+        .track-info-clickable:disabled::before {
+            display: none;
         }
 
         .controls-row {
             display: flex;
             align-items: center;
-            gap: 16px;
+            justify-content: center;
+            gap: 20px;
+            padding: 12px;
+            background: rgba(99, 102, 241, 0.03);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(99, 102, 241, 0.1);
         }
 
         .volume-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
+            padding: 8px 16px;
+            background: var(--surface-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .volume-display {
-            min-width: 60px;
+            min-width: 70px;
             text-align: center;
-            font-size: 0.9rem;
-            color: #666;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--on-surface);
+            font-variant-numeric: tabular-nums;
         }
 
         .playback-controls {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
+            padding: 8px;
+            background: var(--surface-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Enhanced icon buttons */
+        .mdc-icon-button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-normal);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mdc-icon-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--hover-overlay);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+
+        .mdc-icon-button:hover::before {
+            opacity: 1;
+        }
+
+        .mdc-icon-button:active::before {
+            background: var(--active-overlay);
+            opacity: 1;
+        }
+
+        .mdc-icon-button i {
+            font-size: 24px;
+            color: var(--on-surface);
+            transition: all var(--transition-fast);
+            z-index: 1;
+        }
+
+        .mdc-icon-button:hover {
+            transform: scale(1.05);
+        }
+
+        .mdc-icon-button:active {
+            transform: scale(1.02);
+        }
+
+        /* Main play/pause button styling */
+        #playPauseBtn {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            box-shadow: var(--shadow-2);
+        }
+
+        #playPauseBtn::before {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #playPauseBtn i {
+            color: var(--on-primary);
+            font-size: 32px;
+        }
+
+        #playPauseBtn:hover {
+            transform: scale(1.08);
+            box-shadow: var(--shadow-glow);
         }
 
         /* Room Select Modal */
@@ -437,27 +757,34 @@
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .app-container {
-                padding: 12px;
+                padding: 16px;
+            }
+
+            .section-header {
+                font-size: 1.75rem;
+                margin: 32px 0 24px;
             }
 
             .rooms-grid {
                 grid-template-columns: 1fr;
-                gap: 12px;
+                gap: 16px;
             }
 
             .playlists-grid {
                 grid-template-columns: 1fr;
-                gap: 12px;
+                gap: 16px;
             }
 
             .player-container {
                 min-width: auto;
                 width: 100%;
+                padding: 12px;
+                gap: 16px;
             }
 
             .album-art {
-                width: 160px;
-                height: 160px;
+                width: 200px;
+                height: 200px;
             }
 
             .album-art.expanded {
@@ -465,7 +792,7 @@
                 height: 95vh !important;
                 max-width: 90vw !important;
                 max-height: 90vh !important;
-                border-radius: 12px !important;
+                border-radius: var(--radius-md) !important;
                 z-index: 10001 !important;
                 opacity: 1 !important;
                 filter: none !important;
@@ -476,9 +803,64 @@
                 max-width: calc(100vw - 32px);
             }
 
-            .room-button {
+            .modal-header {
+                padding: 20px 20px 16px;
+            }
+
+            .modal-title {
+                font-size: 1.25rem;
+            }
+
+            .modal-body {
                 padding: 20px;
-                font-size: 1rem;
+            }
+
+            .room-button {
+                padding: 24px 20px;
+                font-size: 1.125rem;
+            }
+
+            .controls-row {
+                flex-direction: column;
+                gap: 12px;
+                padding: 10px;
+            }
+
+            .track-progress-container {
+                max-width: 280px;
+            }
+
+            .track-info {
+                font-size: 1.125rem;
+            }
+
+            .track-info-clickable {
+                padding: 8px 14px;
+            }
+
+            /* Enhance touch targets */
+            .mdc-icon-button {
+                width: 52px;
+                height: 52px;
+                touch-action: manipulation;
+            }
+
+            .mdc-icon-button i {
+                font-size: 26px;
+            }
+
+            #playPauseBtn {
+                width: 68px;
+                height: 68px;
+            }
+
+            #playPauseBtn i {
+                font-size: 34px;
+            }
+
+            .room-button {
+                min-height: 72px;
+                touch-action: manipulation;
             }
         }
 
@@ -1175,11 +1557,90 @@
             async openRoomModal(room) {
                 this.currentRoom = room;
                 document.getElementById('roomModalTitle').textContent = room;
+                
+                // Clear all previous room data immediately
+                this.clearPlayerUI();
+                
                 document.getElementById('roomModal').style.display = 'flex';
                 
-                // Start polling for room status
-                this.updateRoomStatus();
+                // Wait for modal to be fully displayed, then immediately set progress
+                setTimeout(() => {
+                    const trackProgress = document.getElementById('trackProgress');
+                    const progressBar = document.getElementById('progressBar');
+                    
+                    if (trackProgress && progressBar) {
+                        // Reset progress bar state first
+                        delete trackProgress.dataset.initialized;
+                        delete trackProgress.dataset.lastPos;
+                        
+                        // Force no transitions and reset to 0
+                        trackProgress.classList.add('notrans');
+                        progressBar.style.transition = 'none';
+                        progressBar.style.width = '0%';
+                        
+                        // Force a reflow
+                        progressBar.offsetHeight;
+                        
+                        // Update room status which will set correct position immediately
+                        this.updateRoomStatus(true);
+                    }
+                }, 100); // Small delay to ensure DOM is ready
+                
+                // Start polling for room status (but not immediately since we handle that above)
                 this.pollInterval = setInterval(() => this.updateRoomStatus(), 5000);
+            }
+
+            clearPlayerUI() {
+                // Clear track info
+                const trackInfoEl = document.getElementById('trackInfo');
+                if (trackInfoEl) {
+                    trackInfoEl.textContent = 'Loading...';
+                    trackInfoEl.classList.remove('track-info-clickable');
+                    trackInfoEl.title = '';
+                    trackInfoEl.disabled = true;
+                }
+                
+                // Clear album art
+                const albumArt = document.getElementById('albumArt');
+                if (albumArt) {
+                    albumArt.src = '';
+                    albumArt.dataset.current = '';
+                    albumArt.alt = 'Loading...';
+                }
+                
+                // Clear volume
+                const volumeDisplay = document.getElementById('volumeDisplay');
+                if (volumeDisplay) {
+                    volumeDisplay.textContent = 'Vol --';
+                }
+                
+                // Reset play/pause button
+                const playPauseBtn = document.getElementById('playPauseBtn');
+                if (playPauseBtn) {
+                    const icon = playPauseBtn.querySelector('i');
+                    if (icon) {
+                        playPauseBtn.dataset.action = 'play';
+                        icon.textContent = 'play_arrow';
+                    }
+                }
+                
+                // Clear progress bar
+                const progressBar = document.getElementById('progressBar');
+                const trackProgress = document.getElementById('trackProgress');
+                if (progressBar && trackProgress) {
+                    trackProgress.classList.add('notrans');
+                    progressBar.style.transition = 'none';
+                    progressBar.style.width = '0%';
+                    delete trackProgress.dataset.initialized;
+                    delete trackProgress.dataset.lastPos;
+                    delete trackProgress.dataset.duration;
+                }
+                
+                // Clear time displays
+                const currentTime = document.getElementById('currentTime');
+                const remainingTime = document.getElementById('remainingTime');
+                if (currentTime) currentTime.textContent = '0:00';
+                if (remainingTime) remainingTime.textContent = '-0:00';
             }
 
             closeRoomModal() {
@@ -1459,7 +1920,7 @@
                 return div.innerHTML;
             }
 
-            async updateRoomStatus() {
+            async updateRoomStatus(forceImmediate = false) {
                 if (!this.currentRoom) return;
 
                 try {
@@ -1467,14 +1928,14 @@
                     const data = await response.json();
 
                     if (data.status === 'ok') {
-                        this.updatePlayerUI(data);
+                        this.updatePlayerUI(data, forceImmediate);
                     }
                 } catch (error) {
                     console.error('Failed to update room status:', error);
                 }
             }
 
-            updatePlayerUI(data) {
+            updatePlayerUI(data, forceImmediate = false) {
                 // Update track info and clickable state
                 const trackInfoEl = document.getElementById('trackInfo');
                 const hasTrack = data.title && data.artist && data.track && data.track !== 'No track playing';
@@ -1507,7 +1968,7 @@
 
                 // Update progress bar
                 if (data.duration_sec && data.position_sec !== undefined) {
-                    this.updateProgressBar(data.duration_sec, data.position_sec);
+                    this.updateProgressBar(data.duration_sec, data.position_sec, forceImmediate);
                 }
 
                 // Update album art
@@ -1516,7 +1977,7 @@
                 }
             }
 
-            updateProgressBar(duration, position) {
+            updateProgressBar(duration, position, forceImmediate = false) {
                 if (this.dragState) return; // Don't update during drag
 
                 const progressBar = document.getElementById('progressBar');
@@ -1524,18 +1985,30 @@
                 const remainingTime = document.getElementById('remainingTime');
                 const trackProgress = document.getElementById('trackProgress');
 
+                if (!progressBar || !trackProgress) return;
+
                 const percentage = duration > 0 ? (position / duration) * 100 : 0;
                 
                 // Check for track change (rewind)
                 const lastPos = parseFloat(trackProgress.dataset.lastPos) || 0;
                 const isRewind = position < lastPos - 1;
+                const isFirstLoad = !trackProgress.dataset.initialized;
 
-                if (isRewind || !trackProgress.dataset.initialized) {
+                if (isRewind || isFirstLoad || forceImmediate) {
+                    // Completely disable transitions and set position immediately
                     trackProgress.classList.add('notrans');
+                    progressBar.style.transition = 'none';
                     progressBar.style.width = percentage + '%';
-                    requestAnimationFrame(() => {
+                    
+                    // Force a reflow to ensure the change is applied
+                    progressBar.offsetHeight;
+                    
+                    // Re-enable transitions after a short delay
+                    setTimeout(() => {
                         trackProgress.classList.remove('notrans');
-                    });
+                        progressBar.style.transition = '';
+                    }, 50);
+                    
                     trackProgress.dataset.initialized = 'true';
                 } else {
                     progressBar.style.width = percentage + '%';
@@ -1545,8 +2018,8 @@
                 trackProgress.dataset.lastPos = position;
 
                 // Update time displays
-                currentTime.textContent = this.formatTime(position);
-                remainingTime.textContent = '-' + this.formatTime(duration - position);
+                if (currentTime) currentTime.textContent = this.formatTime(position);
+                if (remainingTime) remainingTime.textContent = '-' + this.formatTime(duration - position);
             }
 
             formatTime(seconds) {
