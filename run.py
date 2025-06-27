@@ -357,10 +357,12 @@ def room_status():
     # Track info
     title = ''
     artist = ''
+    album_art = ''
     try:
         track_info = sonos.get_current_track_info()
         title = track_info.get('title', '')
         artist = track_info.get('artist', '') or track_info.get('creator', '')
+        album_art = track_info.get('album_art', '')
         desc = f"{title} - {artist}" if title else 'Nothing playing'
 
         # Extract duration & position for progress bar
@@ -398,6 +400,7 @@ def room_status():
         'track': desc,
         'title': title,
         'artist': artist,
+        'album_art': album_art,
         'is_playing': is_playing,
         'volume': vol,
         'duration_sec': duration_sec,

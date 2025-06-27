@@ -1601,12 +1601,7 @@
                 }
                 
                 // Clear album art
-                const albumArt = document.getElementById('albumArt');
-                if (albumArt) {
-                    albumArt.src = '';
-                    albumArt.dataset.current = '';
-                    albumArt.alt = 'Loading...';
-                }
+                this.clearAlbumArt();
                 
                 // Clear volume
                 const volumeDisplay = document.getElementById('volumeDisplay');
@@ -1972,8 +1967,11 @@
                 }
 
                 // Update album art
-                if (data.title && data.artist) {
-                    this.fetchAlbumArt(data.title, data.artist);
+                if (data.album_art) {
+                    this.updateAlbumArt(data.album_art);
+                } else {
+                    // Clear album art if no URL is provided
+                    this.clearAlbumArt();
                 }
             }
 
@@ -2029,22 +2027,25 @@
                 return `${minutes}:${secs.toString().padStart(2, '0')}`;
             }
 
-            async fetchAlbumArt(title, artist) {
+            updateAlbumArt(albumArtUrl) {
                 const albumArt = document.getElementById('albumArt');
-                if (albumArt.dataset.current === title) return;
+                if (albumArt.dataset.current === albumArtUrl) return;
 
                 try {
-                    const query = encodeURIComponent(`${title} ${artist}`.trim());
-                    const response = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`);
-                    const data = await response.json();
-
-                    if (data.results && data.results.length > 0) {
-                        const artworkUrl = data.results[0].artworkUrl100.replace('100x100', '300x300');
-                        albumArt.src = artworkUrl;
-                        albumArt.dataset.current = title;
-                    }
+                    albumArt.src = albumArtUrl;
+                    albumArt.dataset.current = albumArtUrl;
+                    albumArt.alt = 'Album Art';
                 } catch (error) {
-                    console.error('Failed to fetch album art:', error);
+                    console.error('Failed to update album art:', error);
+                }
+            }
+
+            clearAlbumArt() {
+                const albumArt = document.getElementById('albumArt');
+                if (albumArt) {
+                    albumArt.src = '';
+                    albumArt.dataset.current = '';
+                    albumArt.alt = 'Loading...';
                 }
             }
 
