@@ -625,6 +625,51 @@ def jump_to_track():
             return redirect(f"/?secret_key={request.args.get('secret_key')}")
 
 # ---------------------------------------------------------
+#   Playlist management endpoints
+# ---------------------------------------------------------
+
+@app.route('/delete_playlist', methods=['POST'])
+def delete_playlist():
+    """Delete a Sonos playlist."""
+    
+    if request.args.get("secret_key") != app.secret_key:
+        return jsonify({"error": "Forbidden"}), HTTPStatus.FORBIDDEN
+
+    playlist_name = request.args.get("playlist_name")
+    room = request.args.get("room", "Living Room")
+    
+    if not playlist_name:
+        return jsonify({"error": "Missing playlist_name parameter"}), HTTPStatus.BAD_REQUEST
+    
+    try:
+        zones = soco.discover()
+        if not zones:
+            return jsonify({"error": "No Sonos speakers found"}), HTTPStatus.NOT_FOUND
+            
+        sonos = next((z for z in zones if z.player_name == room), list(zones)[0])
+        
+        # Find the playlist
+        playlists = sonos.get_sonos_playlists()
+        target_playlist = next((pl for pl in playlists if pl.title == playlist_name), None)
+        
+        if not target_playlist:
+            return jsonify({"error": "Playlist not found"}), HTTPStatus.NOT_FOUND
+        
+        # Delete the playlist
+        success = sonos.remove_sonos_playlist(target_playlist)
+        
+        if success:
+            return jsonify({
+                "status": "ok", 
+                "message": f"Successfully deleted playlist '{playlist_name}'"
+            })
+        else:
+            return jsonify({"error": "Failed to delete playlist"}), HTTPStatus.INTERNAL_SERVER_ERROR
+            
+    except Exception as e:
+        return jsonify({"error": f"Error deleting playlist: {str(e)}"}), HTTPStatus.INTERNAL_SERVER_ERROR
+
+# ---------------------------------------------------------
 #   Lyrics API endpoint
 # ---------------------------------------------------------
 

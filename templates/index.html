@@ -332,6 +332,33 @@
             border-bottom: none;
         }
 
+        .playlist-delete-container {
+            padding: 16px;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+            background: rgba(244, 67, 54, 0.02);
+            margin-top: 8px;
+        }
+
+        .playlist-delete-button {
+            --mdc-theme-primary: #d32f2f;
+            --mdc-theme-on-primary: white;
+            color: #d32f2f !important;
+            border-color: #d32f2f !important;
+            transition: all 0.2s ease;
+            min-width: 140px;
+        }
+
+        .playlist-delete-button:hover {
+            background-color: rgba(211, 47, 47, 0.08) !important;
+            border-color: #b71c1c !important;
+            transform: translateY(-1px);
+        }
+
+        .playlist-delete-button .mdc-button__icon {
+            margin-right: 8px;
+        }
+
         /* Modal Styles */
         .modal-overlay {
             position: fixed;
@@ -2205,8 +2232,30 @@
                                 trackList.appendChild(listItem);
                             });
 
+                            // Add delete button at the bottom
+                            const deleteButtonContainer = document.createElement('div');
+                            deleteButtonContainer.className = 'playlist-delete-container';
+                            
+                            const deleteButton = document.createElement('button');
+                            deleteButton.className = 'mdc-button mdc-button--outlined playlist-delete-button';
+                            deleteButton.innerHTML = `
+                                <span class="mdc-button__ripple"></span>
+                                <i class="material-icons mdc-button__icon">delete</i>
+                                <span class="mdc-button__label">Delete Playlist</span>
+                            `;
+                            deleteButton.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                this.deletePlaylist(playlist);
+                            });
+                            
+                            deleteButtonContainer.appendChild(deleteButton);
+                            
                             contentEl.appendChild(trackList);
+                            contentEl.appendChild(deleteButtonContainer);
                             contentEl.dataset.loaded = 'true';
+                            
+                            // Initialize MDC ripple for the delete button
+                            mdc.ripple.MDCRipple.attachTo(deleteButton);
                         } else if (tracks.error) {
                             contentEl.innerHTML = `<p style="color: #d32f2f;">${tracks.error}</p>`;
                         }
@@ -2295,6 +2344,67 @@
                     console.error('Failed to jump to track:', error);
                     this.showStatus('Failed to jump to track');
                 }
+            }
+
+            async deletePlaylist(playlistName) {
+                // Add haptic feedback
+                this.hapticFeedback('medium');
+                
+                // Show confirmation dialog
+                const confirmed = confirm(`Are you sure you want to delete the playlist "${playlistName}"?\n\nThis action cannot be undone.`);
+                
+                if (!confirmed) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/delete_playlist?playlist_name=${encodeURIComponent(playlistName)}&secret_key=${this.secretKey}&ajax=1`, {
+                        method: 'POST'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'ok') {
+                        // Success feedback
+                        this.hapticFeedback('success');
+                        this.showStatus(data.message || `Deleted playlist "${playlistName}"`);
+                        
+                        // Remove the playlist from the UI
+                        this.removePlaylistFromUI(playlistName);
+                        
+                    } else {
+                        // Error feedback
+                        this.hapticFeedback('error');
+                        this.showStatus(`Failed to delete playlist: ${data.error || 'Unknown error'}`, 6000);
+                    }
+                } catch (error) {
+                    console.error('Failed to delete playlist:', error);
+                    this.hapticFeedback('error');
+                    this.showStatus('Failed to delete playlist. Please try again.', 6000);
+                }
+            }
+
+            removePlaylistFromUI(playlistName) {
+                // Find and remove the playlist container from the DOM
+                const playlistContainers = document.querySelectorAll('.playlist-card');
+                
+                playlistContainers.forEach(container => {
+                    const playButton = container.querySelector('[data-action="play"]');
+                    if (playButton) {
+                        const playlistContainer = playButton.closest('[data-playlist]');
+                        if (playlistContainer && playlistContainer.dataset.playlist === playlistName) {
+                            // Add removal animation
+                            container.style.transition = 'all 0.3s ease';
+                            container.style.transform = 'scale(0.95)';
+                            container.style.opacity = '0';
+                            
+                            // Remove from DOM after animation
+                            setTimeout(() => {
+                                container.remove();
+                            }, 300);
+                        }
+                    }
+                });
             }
         }
 
