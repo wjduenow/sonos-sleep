@@ -26,18 +26,92 @@ app.secret_key = SECRET_KEY
 
 #wsl_ip = "192.168.68.131"
 
+import socket
+
+# Bound every blocking socket operation. soco talks to speakers over SOAP/HTTP
+# with no consistent timeout, so a single asleep/slow speaker could otherwise
+# pin a gunicorn worker until the request watchdog kills it (WORKER TIMEOUT).
+socket.setdefaulttimeout(10)
+
+# ---------------------------------------------------------
+#   Zone lookup helpers
+#
+#   The old code called soco.discover() (UDP multicast, ~5s, flaky) on every
+#   request. We now prefer a static IP from ROOMS config (no network round
+#   trip) and fall back to a short-lived discovery cache so we multicast at
+#   most once per TTL instead of once per request.
+# ---------------------------------------------------------
+
+_zone_cache = {}          # {player_name: SoCo}
+_zone_cache_ts = 0.0
+_ZONE_CACHE_TTL = 60      # seconds
+
+
+def _discover_cached(force=False):
+    """Return a cached {player_name: SoCo} map, refreshing at most every TTL."""
+    global _zone_cache, _zone_cache_ts
+    now = time.time()
+    if force or not _zone_cache or (now - _zone_cache_ts) > _ZONE_CACHE_TTL:
+        try:
+            zones = soco.discover(timeout=5)
+        except Exception as e:
+            print(f"Discovery failed: {e}")
+            zones = None
+        if zones:
+            fresh = {}
+            for z in zones:
+                try:
+                    fresh[z.player_name] = z
+                except Exception:
+                    pass  # a single slow speaker shouldn't drop the rest
+            if fresh:
+                _zone_cache = fresh
+                _zone_cache_ts = now
+    return _zone_cache
+
+
+def get_zone(room):
+    """Return a SoCo object for the named room, or None if it can't be found.
+
+    Prefers a static IP from ROOMS config (instant, no multicast); otherwise
+    looks the room up in the discovery cache.
+    """
+    if not room:
+        return None
+    ip = ROOMS.get(room, {}).get('ip')
+    if ip:
+        return soco.SoCo(ip)
+    return _discover_cached().get(room)
+
+
+def get_all_zones():
+    """Return a sorted list of all known zones (for the UI room list)."""
+    zones = list(_discover_cached().values())
+    try:
+        zones.sort(key=lambda z: z.player_name)
+    except Exception:
+        pass
+    return zones
+
+
+def get_zone_or_any(room):
+    """Return the named room's zone, or any available zone as a fallback."""
+    zone = get_zone(room)
+    if zone is not None:
+        return zone
+    zones = get_all_zones()
+    return zones[0] if zones else None
+
 @app.route('/', methods=['GET', 'POST'])
 def list_play_lists():
 
   if request.args.get("secret_key") != app.secret_key:
       return 'Forbidden' , http_status.HTTP_403_FORBIDDEN
 
-  zones = soco.discover()  # returns a set or None
+  zones = get_all_zones()  # cached; sorted by player_name
 
   sonos = None
   if zones:
-      zones = sorted(list(zones), key=lambda z: z.player_name)
-
       # Choose a default player (first in sorted list)
       sonos = zones[0]
 
@@ -46,9 +120,6 @@ def list_play_lists():
           if zone.player_name == "Living Room":
               sonos = zone
               break
-  else:
-      # When running without any Sonos system, fall back to empty list
-      zones = []
 
   # Fetch playlists only if we have a valid Sonos object
   playlists = []
@@ -107,11 +178,9 @@ def wake():
       room = content['Room_Name']
 
   try:
-    zones = soco.discover()
-    for zone in zones:
-        print(zone.player_name)
-        if zone.player_name == room: #'Master Bedroom':
-            sonos = zone
+    sonos = get_zone(room)
+    if sonos is None:
+        return "Room not found", http_status.HTTP_404_NOT_FOUND
 
     sonos.pause()
 
@@ -194,12 +263,9 @@ def playlist_tracks():
 
   room = request.args.get("room", "Living Room")
 
-  zones = soco.discover()
-  if not zones:
+  sonos = get_zone_or_any(room)
+  if sonos is None:
       return jsonify([])
-
-  # Select zone
-  sonos = next((z for z in zones if z.player_name == room), list(zones)[0])
 
   try:
       playlists = sonos.get_sonos_playlists()
@@ -228,20 +294,23 @@ def playlist_tracks():
 
 def play_playlist(room, playlist_name, volume):
 
-  zones = soco.discover()
-  for zone in zones:
-      print(zone.player_name)
-      if zone.player_name == room:
-          ## Removing Target Player from Any Groups it may be in
-          zone.unjoin()
-          sonos = zone
+  sonos = get_zone(room)
+  if sonos is None:
+      raise ValueError("Room not found: %s" % room)
 
+  ## Removing Target Player from Any Groups it may be in
+  sonos.unjoin()
+
+  new_pl = None
   playlists = sonos.get_sonos_playlists()
   for playlist in playlists:
       print("#%s#" % (playlist.title))
       if str(playlist.title) == str(playlist_name):
           print("Assigning #%s#" % (playlist_name))
           new_pl = playlist
+
+  if new_pl is None:
+      raise ValueError("Playlist not found: %s" % playlist_name)
 
   sonos.clear_queue()
   print("Adding %s to the queue" % (playlist_name))
@@ -267,12 +336,8 @@ def room_play():
   room = request.args.get('room', 'Master Bedroom')
 
   try:
-    zones = soco.discover()
-    for zone in zones:
-        if zone.player_name == room:
-            sonos = zone
-            break
-    else:
+    sonos = get_zone(room)
+    if sonos is None:
         return "Room not found", http_status.HTTP_404_NOT_FOUND
 
     sonos.play()
@@ -305,12 +370,8 @@ def room_volume():
   STEP = 5
 
   try:
-    zones = soco.discover()
-    for zone in zones:
-        if zone.player_name == room:
-            sonos = zone
-            break
-    else:
+    sonos = get_zone(room)
+    if sonos is None:
         return "Room not found", http_status.HTTP_404_NOT_FOUND
 
     current_vol = sonos.volume or 0
@@ -346,12 +407,8 @@ def room_status():
       return jsonify({"error": "Missing room"}), http_status.HTTP_400_BAD_REQUEST
 
   try:
-    zones = soco.discover()
-    for zone in zones:
-        if zone.player_name == room:
-            sonos = zone
-            break
-    else:
+    sonos = get_zone(room)
+    if sonos is None:
         return jsonify({"error": "Room not found"}), http_status.HTTP_404_NOT_FOUND
 
     # Track info
@@ -416,13 +473,7 @@ def room_status():
 
 
 def _find_sonos(room):
-    zones = soco.discover()
-    if not zones:
-        return None
-    for z in zones:
-        if z.player_name == room:
-            return z
-    return None
+    return get_zone(room)
 
 
 def _simple_control(route, action_fn):
@@ -642,12 +693,10 @@ def delete_playlist():
         return jsonify({"error": "Missing playlist_name parameter"}), HTTPStatus.BAD_REQUEST
     
     try:
-        zones = soco.discover()
-        if not zones:
+        sonos = get_zone_or_any(room)
+        if sonos is None:
             return jsonify({"error": "No Sonos speakers found"}), HTTPStatus.NOT_FOUND
-            
-        sonos = next((z for z in zones if z.player_name == room), list(zones)[0])
-        
+
         # Find the playlist
         playlists = sonos.get_sonos_playlists()
         target_playlist = next((pl for pl in playlists if pl.title == playlist_name), None)

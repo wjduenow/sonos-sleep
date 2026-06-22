@@ -1,12 +1,16 @@
+# "ip" lets the app talk to a speaker directly instead of running a slow,
+# flaky UDP multicast discovery on every request. IPs below were discovered
+# from the LAN on 2026-06-21. Rooms without an "ip" fall back to discovery.
+# (Portable / Living Room / Sitting Room were offline at discovery time.)
 ROOMS = {
-    "Master Bedroom": {"volume": 25}, 
-    "Hayes": {"volume": 35}, 
-    "Brynn": {"volume": 35}, 
-    "Master Bonus": {"volume": 35}, 
-    "Portable": {"volume": 45}, 
-    "Living Room": {"volume": 25}, 
-    "Sitting Room": {"volume": 30}, 
-    "Nursery": {"volume": 45}
+    "Master Bedroom": {"volume": 25, "ip": "192.168.68.94"},
+    "Hayes": {"volume": 35, "ip": "192.168.68.113"},
+    "Brynn": {"volume": 35, "ip": "192.168.68.89"},
+    "Master Bonus": {"volume": 35, "ip": "192.168.68.114"},
+    "Portable": {"volume": 45},
+    "Living Room": {"volume": 25},
+    "Sitting Room": {"volume": 30},
+    "Nursery": {"volume": 45, "ip": "192.168.68.66"}
     }
     
 SECRET_KEY = 'mixelplk'
