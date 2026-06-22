@@ -27,6 +27,14 @@ app.secret_key = SECRET_KEY
 #wsl_ip = "192.168.68.131"
 
 import socket
+import logging
+
+# Log to stdout/stderr so `docker logs` captures it alongside gunicorn output.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+log = logging.getLogger("sonos")
 
 # Bound every blocking socket operation. soco talks to speakers over SOAP/HTTP
 # with no consistent timeout, so a single asleep/slow speaker could otherwise
@@ -46,6 +54,13 @@ _zone_cache = {}          # {player_name: SoCo}
 _zone_cache_ts = 0.0
 _ZONE_CACHE_TTL = 60      # seconds
 
+# Rooms whose configured IP has been confirmed to still answer with the
+# expected name: {room: (ip, verified_at)}. Lets us skip the verification
+# round-trip on hot paths while still re-checking periodically so a DHCP
+# reassignment self-heals instead of silently breaking the room.
+_verified_ips = {}
+_VERIFY_TTL = 600         # seconds
+
 
 def _discover_cached(force=False):
     """Return a cached {player_name: SoCo} map, refreshing at most every TTL."""
@@ -55,7 +70,7 @@ def _discover_cached(force=False):
         try:
             zones = soco.discover(timeout=5)
         except Exception as e:
-            print(f"Discovery failed: {e}")
+            log.warning("Discovery failed: %s", e)
             zones = None
         if zones:
             fresh = {}
@@ -73,14 +88,38 @@ def _discover_cached(force=False):
 def get_zone(room):
     """Return a SoCo object for the named room, or None if it can't be found.
 
-    Prefers a static IP from ROOMS config (instant, no multicast); otherwise
-    looks the room up in the discovery cache.
+    Prefers a static IP from ROOMS config (instant, no multicast). The IP is
+    verified against the speaker's reported name periodically; if it no longer
+    answers (e.g. the speaker got a new DHCP lease), we fall back to discovery
+    and use whatever IP the room currently has.
     """
     if not room:
         return None
+
     ip = ROOMS.get(room, {}).get('ip')
     if ip:
-        return soco.SoCo(ip)
+        verified = _verified_ips.get(room)
+        if verified and verified[0] == ip and (time.time() - verified[1]) < _VERIFY_TTL:
+            return soco.SoCo(ip)  # confirmed recently, trust it
+        zone = soco.SoCo(ip)
+        try:
+            if zone.player_name == room:
+                _verified_ips[room] = (ip, time.time())
+                return zone
+            log.warning("IP %s now reports '%s', expected '%s'; re-discovering",
+                        ip, zone.player_name, room)
+        except Exception as e:
+            log.warning("Direct connection to '%s' at %s failed (%s); re-discovering",
+                        room, ip, e)
+        # Configured IP is stale/unreachable — fall back to live discovery.
+        zone = _discover_cached(force=True).get(room)
+        if zone is not None:
+            try:
+                _verified_ips[room] = (zone.ip_address, time.time())
+            except Exception:
+                pass
+        return zone
+
     return _discover_cached().get(room)
 
 
@@ -92,6 +131,13 @@ def get_all_zones():
     except Exception:
         pass
     return zones
+
+
+@app.route('/health', methods=['GET'])
+def health():
+    """Liveness probe for Docker. Confirms the Flask app is responsive; does
+    not touch Sonos, so a slow speaker can't make a healthy app look down."""
+    return jsonify({"status": "ok"})
 
 
 def get_zone_or_any(room):
@@ -127,7 +173,7 @@ def list_play_lists():
       try:
         playlists = sonos.get_sonos_playlists()
       except Exception as e:
-        print(f"Error fetching Sonos playlists: {e}")
+        log.warning("Error fetching Sonos playlists: %s", e)
 
   playlist_titles = [pl.title for pl in playlists]
 
@@ -159,6 +205,7 @@ def sleep():
     flash("Running Sleep Routine in %s" %(str(room)), 'success')
     return redirect("/?secret_key=%s" % (secret_key))
   except Exception as e:
+     log.exception("request to %s failed", request.path)
      return ("error: %s" % (e))
 
 @app.route('/wake', methods=['GET', 'POST'])
@@ -191,6 +238,7 @@ def wake():
     return redirect("/?secret_key=%s" % (secret_key))
 
   except Exception as e:
+     log.exception("request to %s failed", request.path)
      return ("error: %s" % (e))
 
 @app.route('/sonos_playlist', methods=['GET', 'POST'])
@@ -231,6 +279,7 @@ def sonos_playlist():
     flash("Playing %s in %s at %s volume" % (play_list, room, str(room_volume)), 'success')
     return redirect("/?secret_key=%s" % (secret_key))
   except Exception as e:
+     log.exception("request to %s failed", request.path)
      error_msg = "error: %s in (room: %s)" % (e, room)
      
      # Handle AJAX requests
@@ -270,6 +319,7 @@ def playlist_tracks():
   try:
       playlists = sonos.get_sonos_playlists()
   except Exception as e:
+      log.exception("request to %s failed", request.path)
       return jsonify({"error": f"Unable to fetch playlists: {e}"}), http_status.HTTP_500_INTERNAL_SERVER_ERROR
 
   target_playlist = next((pl for pl in playlists if pl.title == playlist_name), None)
@@ -277,8 +327,8 @@ def playlist_tracks():
       return jsonify([])
 
   try:
-      browse_result = sonos.browse(target_playlist) if hasattr(sonos, 'browse') else sonos.music_library.browse(target_playlist)
-      pl_tracks = browse_result.item_list if hasattr(browse_result, 'item_list') else list(browse_result or [])
+      # music_library.browse() returns a SearchResult (a list subclass).
+      pl_tracks = list(sonos.music_library.browse(target_playlist) or [])
 
       tracks_json = [
           {
@@ -290,6 +340,7 @@ def playlist_tracks():
 
       return jsonify(tracks_json)
   except Exception as e:
+      log.exception("playlist_tracks failed for room=%s playlist=%s", room, playlist_name)
       return jsonify({"error": f"Error fetching tracks: {e}"})
 
 def play_playlist(room, playlist_name, volume):
@@ -304,16 +355,14 @@ def play_playlist(room, playlist_name, volume):
   new_pl = None
   playlists = sonos.get_sonos_playlists()
   for playlist in playlists:
-      print("#%s#" % (playlist.title))
       if str(playlist.title) == str(playlist_name):
-          print("Assigning #%s#" % (playlist_name))
           new_pl = playlist
 
   if new_pl is None:
       raise ValueError("Playlist not found: %s" % playlist_name)
 
+  log.info("Playing playlist '%s' in '%s' at volume %s", playlist_name, room, volume)
   sonos.clear_queue()
-  print("Adding %s to the queue" % (playlist_name))
   sonos.add_to_queue(new_pl)
   sonos.play_from_queue(0)
   sonos.volume = volume
@@ -349,6 +398,7 @@ def room_play():
     return redirect("/?secret_key=%s" % (secret_key))
 
   except Exception as e:
+     log.exception("request to %s failed", request.path)
      return ("error: %s" % (e))
 
 # ---------------------------------------------------------
@@ -389,6 +439,7 @@ def room_volume():
     return redirect("/?secret_key=%s" % (secret_key))
 
   except Exception as e:
+     log.exception("request to %s failed", request.path)
      return ("error: %s" % (e))
 
 # ---------------------------------------------------------
@@ -465,6 +516,7 @@ def room_status():
     })
 
   except Exception as e:
+     log.exception("request to %s failed", request.path)
      return jsonify({"error": str(e)})
 
 # ---------------------------------------------------------
@@ -490,6 +542,7 @@ def _simple_control(route, action_fn):
     try:
         action_fn(sonos)
     except Exception as e:
+        log.exception("request to %s failed", request.path)
         return f"error: {e}", http_status.HTTP_500_INTERNAL_SERVER_ERROR
 
     if request.args.get('ajax') == '1':
@@ -549,6 +602,7 @@ def room_seek():
     try:
         sonos.seek(position_str)
     except Exception as e:
+        log.exception("request to %s failed", request.path)
         return f"error: {e}", http_status.HTTP_500_INTERNAL_SERVER_ERROR
 
     if request.args.get('ajax') == '1':
@@ -566,16 +620,16 @@ def get_queue():
     """Return the current queue for the requested room as JSON."""
     
     if request.args.get("secret_key") != app.secret_key:
-        return jsonify({"error": "Forbidden"}), HTTPStatus.HTTP_403_FORBIDDEN
+        return jsonify({"error": "Forbidden"}), http_status.HTTP_403_FORBIDDEN
 
     room = request.args.get('room')
     if not room:
-        return jsonify({"error": "Missing room parameter"}), HTTPStatus.HTTP_400_BAD_REQUEST
+        return jsonify({"error": "Missing room parameter"}), http_status.HTTP_400_BAD_REQUEST
 
     try:
         sonos = _find_sonos(room)
         if sonos is None:
-            return jsonify({"error": "Room not found"}), HTTPStatus.HTTP_404_NOT_FOUND
+            return jsonify({"error": "Room not found"}), http_status.HTTP_404_NOT_FOUND
 
         # Get the current queue
         queue = sonos.get_queue()
@@ -626,7 +680,8 @@ def get_queue():
         })
 
     except Exception as e:
-        return jsonify({"error": f"Failed to get queue: {str(e)}"}), HTTPStatus.HTTP_500_INTERNAL_SERVER_ERROR
+        log.exception("request to %s failed", request.path)
+        return jsonify({"error": f"Failed to get queue: {str(e)}"}), http_status.HTTP_500_INTERNAL_SERVER_ERROR
 
 # ---------------------------------------------------------
 #   Jump to track in queue
@@ -637,26 +692,26 @@ def jump_to_track():
     """Jump to a specific track in the queue by index."""
     
     if request.args.get("secret_key") != app.secret_key:
-        return jsonify({"error": "Forbidden"}), HTTPStatus.HTTP_403_FORBIDDEN
+        return jsonify({"error": "Forbidden"}), http_status.HTTP_403_FORBIDDEN
 
     room = request.args.get('room')
     track_index = request.args.get('track_index')
     
     if not room:
-        return jsonify({"error": "Missing room parameter"}), HTTPStatus.HTTP_400_BAD_REQUEST
+        return jsonify({"error": "Missing room parameter"}), http_status.HTTP_400_BAD_REQUEST
     
     if track_index is None:
-        return jsonify({"error": "Missing track_index parameter"}), HTTPStatus.HTTP_400_BAD_REQUEST
+        return jsonify({"error": "Missing track_index parameter"}), http_status.HTTP_400_BAD_REQUEST
 
     try:
         track_index = int(track_index)
     except ValueError:
-        return jsonify({"error": "Invalid track_index parameter"}), HTTPStatus.HTTP_400_BAD_REQUEST
+        return jsonify({"error": "Invalid track_index parameter"}), http_status.HTTP_400_BAD_REQUEST
 
     try:
         sonos = _find_sonos(room)
         if sonos is None:
-            return jsonify({"error": "Room not found"}), HTTPStatus.HTTP_404_NOT_FOUND
+            return jsonify({"error": "Room not found"}), http_status.HTTP_404_NOT_FOUND
 
         # Jump to the specified track in the queue (soco uses 0-based indexing)
         sonos.play_from_queue(track_index)
@@ -668,9 +723,10 @@ def jump_to_track():
         return redirect(f"/?secret_key={request.args.get('secret_key')}")
 
     except Exception as e:
+        log.exception("request to %s failed", request.path)
         error_msg = f"Failed to jump to track: {str(e)}"
         if request.args.get('ajax') == '1':
-            return jsonify({"error": error_msg}), HTTPStatus.HTTP_500_INTERNAL_SERVER_ERROR
+            return jsonify({"error": error_msg}), http_status.HTTP_500_INTERNAL_SERVER_ERROR
         else:
             flash(error_msg, 'error')
             return redirect(f"/?secret_key={request.args.get('secret_key')}")
@@ -716,6 +772,7 @@ def delete_playlist():
             return jsonify({"error": "Failed to delete playlist"}), HTTPStatus.INTERNAL_SERVER_ERROR
             
     except Exception as e:
+        log.exception("request to %s failed", request.path)
         return jsonify({"error": f"Error deleting playlist: {str(e)}"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 # ---------------------------------------------------------

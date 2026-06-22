@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   sonos-sleep:
     container_name: sonos-sleep
@@ -7,3 +6,12 @@ services:
     network_mode: host
 #    ports:
 #      - "5000:5000"
+    # Liveness probe: hits /health (no auth, no Sonos I/O) using the Python
+    # already in the image, so no extra packages are needed. Marks the
+    # container unhealthy if the app stops responding.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
