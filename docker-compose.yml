@@ -6,6 +6,10 @@ services:
     network_mode: host
 #    ports:
 #      - "5000:5000"
+    # autoheal (below) watches for this label and restarts the container if it
+    # goes unhealthy. Native Docker only marks status; it won't restart on its own.
+    labels:
+      - autoheal=true
     # Liveness probe: hits /health (no auth, no Sonos I/O) using the Python
     # already in the image, so no extra packages are needed. Marks the
     # container unhealthy if the app stops responding.
@@ -15,3 +19,17 @@ services:
       timeout: 10s
       retries: 3
       start_period: 15s
+
+  # Restarts any container labeled `autoheal=true` that Docker reports as
+  # unhealthy (a wedged-but-running app, which restart:unless-stopped won't
+  # catch). Talks only to the local Docker socket; not exposed to the network.
+  autoheal:
+    container_name: sonos-autoheal
+    image: willfarrell/autoheal:latest
+    restart: unless-stopped
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - AUTOHEAL_INTERVAL=15        # seconds between checks
+      - AUTOHEAL_START_PERIOD=30    # grace period before acting on a new container
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
